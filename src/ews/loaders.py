@@ -21,6 +21,9 @@ from __future__ import annotations
 import os
 from typing import Any
 
+import json
+import time
+import requests
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -192,6 +195,342 @@ def _prices_yfinance_impl(tickers: list[str], start: str, end: str) -> pd.DataFr
     print(f"\nPrice matrix (long): {len(df)} rows, {df['ticker'].nunique()} tickers")
     return df
 
+# ---------------------------------------------------------------------------
+# SEC EDGAR XBRL fundamentals loader
+# ---------------------------------------------------------------------------
+
+_SEC_CONCEPTS: dict[str, tuple[str, list[str]]] = {
+    "TotalAssets": (
+        "Assets",
+        ["AssetsCurrent"],
+    ),
+    "TotalLiabilities": (
+        "Liabilities",
+        ["LiabilitiesAndStockholdersEquity"],
+    ),
+    "StockholdersEquity": (
+        "StockholdersEquity",
+        ["StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"],
+    ),
+    "Cash": (
+        "CashAndCashEquivalentsAtCarryingValue",
+        ["CashCashEquivalentsAndShortTermInvestments", "Cash"],
+    ),
+    "CurrentAssets": (
+        "AssetsCurrent",
+        [],
+    ),
+    "CurrentLiabilities": (
+        "LiabilitiesCurrent",
+        [],
+    ),
+    "NetIncome": (
+        "NetIncomeLoss",
+        ["ProfitLoss", "NetIncomeLossAvailableToCommonStockholdersBasic"],
+    ),
+    "RetainedEarnings": (
+        "RetainedEarningsAccumulatedDeficit",
+        [],
+    ),
+}
+
+_SEC_HEADERS = {
+    "User-Agent": "credit-risk-ews contact@ews-team.edu",
+    "Accept-Encoding": "gzip, deflate",
+}
+_SEC_RATE_SLEEP = 0.12   # 10 req/s SEC limit; 120ms between calls is safe
+_EDGAR_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
+_EDGAR_FACTS_URL   = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
+
+
+def _load_cik_map() -> dict[str, int]:
+    """Download/cache the SEC company_tickers.json -> {TICKER: CIK}."""
+    os.makedirs(PATHS.RAW, exist_ok=True)
+    cache = os.path.join(PATHS.RAW, "sec_company_tickers.json")
+    if os.path.exists(cache):
+        with open(cache) as f:
+            raw = json.load(f)
+    else:
+        resp = requests.get(_EDGAR_TICKERS_URL, headers=_SEC_HEADERS, timeout=30)
+        resp.raise_for_status()
+        raw = resp.json()
+        with open(cache, "w") as f:
+            json.dump(raw, f)
+        time.sleep(_SEC_RATE_SLEEP)
+    # SEC format: {"0": {"cik_str": 40987, "ticker": "GE", ...}, ...}
+    return {v["ticker"].upper(): int(v["cik_str"]) for v in raw.values()}
+
+
+def _load_company_facts(cik: int, ticker: str) -> dict:
+    """Download (and disk-cache) the XBRL company-facts JSON for one CIK."""
+    os.makedirs(PATHS.RAW, exist_ok=True)
+    cache = os.path.join(PATHS.RAW, f"sec_{ticker.upper()}.json")
+    if os.path.exists(cache):
+        with open(cache) as f:
+            return json.load(f)
+    url = _EDGAR_FACTS_URL.format(cik=cik)
+    resp = requests.get(url, headers=_SEC_HEADERS, timeout=60)
+    resp.raise_for_status()
+    data = resp.json()
+    with open(cache, "w") as f:
+        json.dump(data, f)
+    time.sleep(_SEC_RATE_SLEEP)
+    return data
+
+
+def _extract_concept_series(facts: dict, primary: str, fallbacks: list[str]) -> pd.Series | None:
+    """
+    Extract one GAAP concept as a time-series (period-end date -> value).
+    Tries primary name first, then each fallback.
+    Only uses 10-K and 10-Q entries (skips instantaneous point-in-time values).
+    Returns None if nothing found.
+    """
+    gaap = facts.get("facts", {}).get("us-gaap", {})
+    for concept in [primary] + fallbacks:
+        if concept not in gaap:
+            continue
+        usd_entries = gaap[concept].get("units", {}).get("USD", [])
+        if not usd_entries:
+            continue
+        rows = []
+        for entry in usd_entries:
+            if entry.get("form", "") not in ("10-K", "10-Q"):
+                continue
+            end_date = entry.get("end")
+            val = entry.get("val")
+            if end_date is None or val is None:
+                continue
+            rows.append({"date": pd.to_datetime(end_date), "val": float(val)})
+        if not rows:
+            continue
+        s = (
+            pd.DataFrame(rows)
+            .sort_values("date")
+            .drop_duplicates(subset="date", keep="last")
+            .set_index("date")["val"]
+        )
+        return s
+    return None
+
+
+def _compute_late_filing_flag(facts: dict, monthly_dates: pd.DatetimeIndex) -> pd.Series:
+    """
+    Returns integer Series (0/1) indexed by monthly_dates.
+    Flagged 1 if any 10-K/10-Q due in the prior 4-month window was filed
+    more than 5 days after its SEC deadline:
+      10-K deadline = period_end + 60 days  (accelerated filer)
+      10-Q deadline = period_end + 40 days
+    Falls back to all-zero if no filing metadata found.
+    """
+    filings_meta = facts.get("facts", {}).get("us-gaap", {})
+    filed_rows = []
+    for concept_data in filings_meta.values():
+        for unit_entries in concept_data.get("units", {}).values():
+            for entry in unit_entries:
+                form = entry.get("form", "")
+                if form not in ("10-K", "10-Q"):
+                    continue
+                end_date  = entry.get("end")
+                filed_str = entry.get("filed")
+                if end_date and filed_str:
+                    filed_rows.append({
+                        "period_end": pd.to_datetime(end_date),
+                        "filed":      pd.to_datetime(filed_str),
+                        "form":       form,
+                    })
+        if len(filed_rows) > 100:   # enough data; stop early
+            break
+
+    flags = pd.Series(0, index=monthly_dates, dtype=int)
+    if not filed_rows:
+        return flags
+
+    filing_df = (
+        pd.DataFrame(filed_rows)
+        .drop_duplicates(subset=["period_end", "form"], keep="first")
+    )
+    filing_df["deadline_days"] = filing_df["form"].map({"10-K": 60, "10-Q": 40})
+    filing_df["deadline"] = (
+        filing_df["period_end"]
+        + pd.to_timedelta(filing_df["deadline_days"], unit="D")
+    )
+    filing_df["late"] = (filing_df["filed"] - filing_df["deadline"]).dt.days > 5
+
+    for month in monthly_dates:
+        lookback_start = month - pd.DateOffset(months=4)
+        window = filing_df[
+            (filing_df["deadline"] >= lookback_start) &
+            (filing_df["deadline"] <= month)
+        ]
+        if len(window) > 0 and window["late"].any():
+            flags[month] = 1
+
+    return flags
+
+
+def _fundamentals_sec_impl(
+    tickers: list[str],
+    dates: pd.DatetimeIndex,
+) -> pd.DataFrame:
+    """
+    Real SEC EDGAR XBRL fundamentals loader.
+
+    Ratio definitions:
+      leverage          = Liabilities / Assets
+      liquidity_buffer  = Cash / Assets
+      wc_ratio          = (CurrentAssets - CurrentLiabilities) / Assets
+      profitability     = NetIncome / Assets
+      z_score           = 1.2*wc_ratio + 1.4*(RetainedEarnings/Assets)
+                        + 3.3*profitability + 0.6*(SE/Liabilities)
+                        + 0.999*profitability  [simplified Altman]
+
+    Graceful degradation:
+      - Missing concept -> that ratio is NaN for that ticker.
+      - CIK not found / JSON fetch fails -> ticker skipped, warned,
+        refilled via placeholder.
+      - < 12 non-null months after ffill -> ticker skipped similarly.
+    """
+    MIN_SEC_ROWS = 12
+
+    print("\nLoading SEC EDGAR fundamentals (with data/raw/ cache)...")
+    print(f"  Tickers: {', '.join(tickers)}")
+    print(f"  Monthly dates: {dates.min().strftime('%Y-%m')} "
+          f"to {dates.max().strftime('%Y-%m')} ({len(dates)} months)")
+
+    try:
+        cik_map = _load_cik_map()
+    except Exception as e:
+        raise LoaderError(f"SEC CIK map download failed: {e}") from e
+
+    all_records: list[pd.DataFrame] = []
+    skipped: list[str] = []
+
+    for ticker in tickers:
+        print(f"  Processing {ticker}...", end=" ", flush=True)
+
+        cik = cik_map.get(ticker.upper())
+        if cik is None:
+            print("CIK not found — skipping")
+            skipped.append(ticker)
+            continue
+
+        try:
+            facts = _load_company_facts(cik, ticker)
+        except Exception as e:
+            print(f"facts fetch failed ({e}) — skipping")
+            skipped.append(ticker)
+            continue
+
+        # Extract raw concept series
+        concepts: dict[str, pd.Series | None] = {}
+        for key, (primary, fallbacks) in _SEC_CONCEPTS.items():
+            concepts[key] = _extract_concept_series(facts, primary, fallbacks)
+
+        # Build quarterly snapshot index (union of all concept dates)
+        all_dates_set: set[pd.Timestamp] = set()
+        for s in concepts.values():
+            if s is not None:
+                all_dates_set.update(s.index)
+
+        if not all_dates_set:
+            print("no us-gaap data — skipping")
+            skipped.append(ticker)
+            continue
+
+        q_index = pd.DatetimeIndex(sorted(all_dates_set))
+        snap = pd.DataFrame(index=q_index)
+        for key, s in concepts.items():
+            snap[key] = s.reindex(q_index) if s is not None else np.nan
+
+        # Compute ratios at each quarterly snapshot
+        ta   = snap["TotalAssets"]
+        tl   = snap["TotalLiabilities"]
+        se   = snap["StockholdersEquity"]
+        cash = snap["Cash"]
+        ca   = snap["CurrentAssets"]
+        cl   = snap["CurrentLiabilities"]
+        ni   = snap["NetIncome"]
+        re   = snap["RetainedEarnings"]
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            leverage         = np.where(ta != 0, tl / ta,        np.nan)
+            liquidity_buffer = np.where(ta != 0, cash / ta,      np.nan)
+            wc_ratio         = np.where(ta != 0, (ca - cl) / ta, np.nan)
+            profitability    = np.where(ta != 0, ni / ta,        np.nan)
+            re_ratio         = np.where(ta != 0, re / ta,        np.nan)
+            se_tl_ratio      = np.where(tl != 0, se / tl,        np.nan)
+
+        z_score = (
+            1.2   * wc_ratio
+            + 1.4   * re_ratio
+            + 3.3   * profitability
+            + 0.6   * se_tl_ratio
+            + 0.999 * profitability
+        )
+
+        quarterly = pd.DataFrame({
+            "leverage":         leverage,
+            "liquidity_buffer": liquidity_buffer,
+            "wc_ratio":         wc_ratio,
+            "profitability":    profitability,
+            "z_score":          z_score,
+        }, index=q_index)
+
+        # Forward-fill quarterly -> monthly
+        combined_index = q_index.union(dates).sort_values()
+        monthly_fund = (
+            quarterly
+            .reindex(combined_index)
+            .ffill()
+            .reindex(dates)
+        )
+
+        if monthly_fund.dropna(how="all").shape[0] < MIN_SEC_ROWS:
+            print(f"only {monthly_fund.dropna(how='all').shape[0]} non-null rows — skipping")
+            skipped.append(ticker)
+            continue
+
+        # Late-filing flag
+        late_flags = _compute_late_filing_flag(facts, dates)
+        monthly_fund["late_filing"] = late_flags.values
+        monthly_fund["ticker"]      = ticker
+        monthly_fund["date"]        = dates
+
+        all_records.append(monthly_fund.reset_index(drop=True))
+        cov = monthly_fund.drop(columns=["ticker","date"]).notna().mean().mean()
+        print(f"OK ({monthly_fund.shape[0]} months, {cov:.0%} coverage)")
+
+    if skipped:
+        print(f"\n  Warning: {len(skipped)} ticker(s) skipped, "
+              f"falling back to placeholder: {', '.join(skipped)}")
+        all_records.append(_fundamentals_placeholder_impl(skipped, dates))
+
+    if not all_records:
+        raise LoaderError(
+            "SEC loader: no tickers produced usable data. "
+            "Check network access to data.sec.gov."
+        )
+
+    df = pd.concat(all_records, ignore_index=True)
+    df["date"] = pd.to_datetime(df["date"])
+
+    clip_map = {
+        "leverage":         (0.0,  1.0),
+        "liquidity_buffer": (0.0,  1.0),
+        "wc_ratio":         (-1.0, 1.0),
+        "profitability":    (-0.5, 0.5),
+        "z_score":          (-5.0, 15.0),
+    }
+    for col, (lo, hi) in clip_map.items():
+        df[col] = df[col].clip(lo, hi)
+
+    df = df[["ticker", "date", "leverage", "liquidity_buffer",
+             "wc_ratio", "profitability", "z_score", "late_filing"]]
+
+    print(f"\n  SEC fundamentals: {len(df)} firm-months, "
+          f"{df['ticker'].nunique()} tickers")
+    return df
+
 
 # =============================================================================
 # load_fundamentals
@@ -200,7 +539,8 @@ def _prices_yfinance_impl(tickers: list[str], start: str, end: str) -> pd.DataFr
 def load_fundamentals(
     tickers: list[str],
     dates: pd.DatetimeIndex,
-    source: str = "placeholder",
+    # source: str = "placeholder",
+    source: str = "sec",
 ) -> pd.DataFrame:
     """
     Returns firm-month fundamentals in LONG format.
@@ -211,18 +551,14 @@ def load_fundamentals(
     source='placeholder' -> synthetic industry-typical profiles (Phase 1 default).
     source='sec'         -> Allen's real SEC EDGAR loader (not implemented yet).
     """
-    if source == "placeholder":
+    if source == "sec":
+        df = _fundamentals_sec_impl(tickers, dates)
+    elif source == "placeholder":
         df = _fundamentals_placeholder_impl(tickers, dates)
-    elif source == "sec":
-        raise NotImplementedError(
-            "load_fundamentals(source='sec') — Allen's SEC EDGAR loader is not yet "
-            "wired. See docs/05_PLUGGING_IN_REAL_DATA.md for the contract your "
-            "implementation must satisfy."
-        )
     else:
         raise LoaderError(
             f"load_fundamentals: unknown source={source!r}. "
-            f"Supported: 'placeholder', 'sec'."
+            f"Supported: 'sec', 'placeholder'."
         )
     check_loader("fundamentals", df)
     return df
