@@ -76,7 +76,8 @@ def main() -> None:
         prices.pivot(index="date", columns="ticker", values="adj_close")
         .resample("ME").last().index
     )
-    fundamentals = load_fundamentals(TICKERS, monthly_dates, source="placeholder")
+    # fundamentals = load_fundamentals(TICKERS, monthly_dates, source="placeholder")
+    fundamentals = load_fundamentals(TICKERS, monthly_dates, source="sec")
     _write_interim(fundamentals, "fundamentals", "placeholder")
 
     macros = load_macros(monthly_dates, source="synthetic")
