@@ -1,0 +1,113 @@
+## Existing 10 Prototype Firms (Phase 1)
+
+| No. | Ticker | Company | Category | Purpose |
+|----:|--------|---------|----------|---------|
+| 1 | GE | General Electric | Industrial / Restructuring | Historical stress case |
+| 2 | F | Ford Motor | Auto / Cyclical | Macro-sensitive cyclical firm |
+| 3 | BBBY | Bed Bath & Beyond | Retail / Distressed | Bankruptcy / distress example |
+| 4 | XOM | Exxon Mobil | Energy / Commodity-sensitive | Stable energy benchmark |
+| 5 | CHK | Chesapeake Energy | Energy / Distressed | Bankruptcy / distressed case |
+| 6 | INTC | Intel | Technology / Mature Tech | Competitive pressure example |
+| 7 | SNAP | Snap Inc. | Technology / Volatile Growth | High-volatility growth case |
+| 8 | PFE | Pfizer | Healthcare / Defensive | Stable defensive benchmark |
+| 9 | SPG | Simon Property Group | Real Estate / Rate-sensitive | Interest-rate-sensitive firm |
+| 10 | AAL | American Airlines | Airline / Cyclical Distressed | High-risk cyclical case |
+
+
+## Additional 70 Firms (Phase 2 Expansion)
+A. Technology and Communication Services
+| No. | Ticker | Company | Category | Purpose |
+|----:|--------|---------|----------|---------|
+| 11 | AAPL | Apple | Technology | Stable benchmark |
+| 12 | MSFT | Microsoft | Technology | Stable benchmark |
+| 13 | NVDA | Nvidia | Semiconductor / Growth | Volatile growth |
+| 14 | AMD | AMD | Semiconductor | Volatile cyclical tech |
+| 15 | MU | Micron | Semiconductor | Cyclical tech |
+| 16 | CSCO | Cisco | Technology | Stable comparison |
+| 17 | ORCL | Oracle | Technology | Stable comparison |
+| 18 | CRM | Salesforce | Software | Growth comparison |
+| 19 | IBM | IBM | Legacy Technology | Mature restructuring case |
+| 20 | META | Meta | Communication / Growth | Volatile large-cap |
+| 21 | GOOGL | Alphabet | Communication | Stable large-cap |
+| 22 | NFLX | Netflix | Media / Growth | Volatile consumer-tech |
+| 23 | PYPL | PayPal | Fintech | Transition / stress case |
+| 24 | SQ | Block | Fintech | High-volatility growth |
+| 25 | UBER | Uber | Platform Economy | Growth / volatile |
+
+B.Consumer Discretionary, Retail, and Autos
+| 26 | AMZN | Amazon | Consumer / Tech | Stable benchmark |
+| 27 | TSLA | Tesla | Auto / Growth | High volatility |
+| 28 | GM | General Motors | Auto / Cyclical | Cyclical comparison |
+| 29 | HD | Home Depot | Consumer Retail | Housing-sensitive |
+| 30 | LOW | Lowe’s | Consumer Retail | Housing-sensitive |
+| 31 | NKE | Nike | Consumer Brand | Demand-sensitive |
+| 32 | SBUX | Starbucks | Consumer | Demand-sensitive |
+| 33 | MCD | McDonald's | Defensive Consumer | Stable comparison |
+| 34 | TGT | Target | Retail | Retail comparison |
+| 35 | WMT | Walmart | Retail | Defensive benchmark |
+| 36 | COST | Costco | Retail | Defensive benchmark |
+| 37 | M | Macy’s | Retail / Distressed | Stress case |
+| 38 | KSS | Kohl’s | Retail / Distressed | Stress case |
+| 39 | GPS | Gap | Retail / Cyclical | Stress-prone retail |
+| 40 | ROST | Ross Stores | Retail | Stable comparison |
+
+C. Industrials, Transport, and Aerospace
+| 41 | BA | Boeing | Aerospace | Major stress case |
+| 42 | CAT | Caterpillar | Industrials | Macro-sensitive |
+| 43 | DE | Deere | Industrials | Macro-sensitive |
+| 44 | MMM | 3M | Industrials | Litigation / stress case |
+| 45 | HON | Honeywell | Industrials | Stable comparison |
+| 46 | UPS | UPS | Logistics | Macro-sensitive |
+| 47 | FDX | FedEx | Logistics | Macro-sensitive |
+| 48 | DAL | Delta | Airline | Cyclical |
+| 49 | UAL | United Airlines | Airline | Cyclical |
+| 50 | LUV | Southwest | Airline | Cyclical |
+
+D. Energy and Materials
+| 51 | CVX | Chevron | Energy | Stable benchmark |
+| 52 | COP | ConocoPhillips | Energy | Commodity-sensitive |
+| 53 | OXY | Occidental Petroleum | Energy | Leveraged energy |
+| 54 | SLB | Schlumberger | Oil Services | Energy-cycle exposure |
+| 55 | HAL | Halliburton | Oil Services | Energy-cycle exposure |
+| 56 | FCX | Freeport-McMoRan | Materials | Commodity-sensitive |
+| 57 | NUE | Nucor | Steel | Cyclical |
+| 58 | DOW | Dow | Chemicals | Cyclical |
+| 59 | ALB | Albemarle | Materials | Volatile commodity |
+| 60 | MOS | Mosaic | Materials | Commodity-sensitive |
+
+E. Healthcare and Defensive Firms
+| 61 | JNJ | Johnson & Johnson | Healthcare | Defensive benchmark |
+| 62 | MRK | Merck | Healthcare | Defensive benchmark |
+| 63 | ABBV | AbbVie | Healthcare | Stable comparison |
+| 64 | BMY | Bristol Myers Squibb | Healthcare | Stable comparison |
+| 65 | GILD | Gilead | Healthcare | Mature biotech |
+| 66 | AMGN | Amgen | Healthcare | Stable comparison |
+| 67 | MDT | Medtronic | Healthcare | Stable comparison |
+| 68 | CVS | CVS Health | Healthcare / Retail | Mixed defensive |
+| 69 | UNH | UnitedHealth | Healthcare | Stable benchmark |
+| 70 | TMO | Thermo Fisher | Healthcare | Stable benchmark |
+
+E. Healthcare and Defensive Firms
+| 71 | AMT | American Tower | REIT / Infrastructure | Rate-sensitive |
+| 72 | PLD | Prologis | REIT | Rate-sensitive |
+| 73 | O | Realty Income | REIT | Rate-sensitive |
+| 74 | VTR | Ventas | REIT | Rate-sensitive |
+| 75 | T | AT&T | Telecom | Leveraged |
+| 76 | VZ | Verizon | Telecom | Leveraged |
+| 77 | KO | Coca-Cola | Consumer Staples | Defensive benchmark |
+| 78 | PEP | PepsiCo | Consumer Staples | Defensive benchmark |
+| 79 | PG | Procter & Gamble | Consumer Staples | Defensive benchmark |
+| 80 | KHC | Kraft Heinz | Consumer Staples | Past stress case |
+
+
+
+## Suggested Company Category Buckets (Model Comparison)
+
+| Category | Example Companies | Research Purpose |
+|----------|------------------|------------------|
+| Distressed / Restructuring | BBBY, CHK, BA, Macy’s, Kohl’s, AT&T, Kraft Heinz | Test performance under stressed firms |
+| Cyclical / Macro-sensitive | Ford, GM, AAL, DAL, UAL, CAT, Deere, FedEx | Test macro-driven deterioration |
+| Volatile Growth / Tech | SNAP, Tesla, Block, Uber, Nvidia, AMD, PayPal | Test market-driven volatility cases |
+| Commodity-sensitive | XOM, CVX, COP, OXY, FCX, ALB, MOS | Test commodity cycle effects |
+| Defensive / Stable | Pfizer, JNJ, Merck, Coca-Cola, Pepsi, PG, Walmart, Costco | Stable comparison group |
+| Rate-sensitive / Real Estate | SPG, AMT, PLD, Realty Income, Ventas | Test interest-rate sensitivity |
