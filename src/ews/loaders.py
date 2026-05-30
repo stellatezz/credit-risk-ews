@@ -140,17 +140,17 @@ def _prices_yfinance_impl(tickers: list[str], start: str, end: str) -> pd.DataFr
 
         if os.path.exists(cache_path):
             raw = pd.read_csv(cache_path, parse_dates=["date"])
-            print(f"  ✓ {ticker}: {len(raw)} days (cached)")
+            print(f"  [OK] {ticker}: {len(raw)} days (cached)")
         else:
             try:
                 data = yf.download(ticker, start=start, end=end, progress=False, auto_adjust=False)
             except Exception as e:
-                print(f"  ✗ {ticker}: download failed ({e})")
+                print(f"  [FAIL] {ticker}: download failed ({e})")
                 dropped.append((ticker, 0))
                 continue
 
             if data is None or len(data) == 0:
-                print(f"  ✗ {ticker}: no data returned")
+                print(f"  [FAIL] {ticker}: no data returned")
                 dropped.append((ticker, 0))
                 continue
 
@@ -166,8 +166,8 @@ def _prices_yfinance_impl(tickers: list[str], start: str, end: str) -> pd.DataFr
                 "adj_close": data["Adj Close"].squeeze().values,
             })
             raw.to_csv(cache_path, index=False)
-            print(f"  ✓ {ticker}: {len(raw)} days "
-                  f"({raw['date'].min().strftime('%Y-%m-%d')} → "
+            print(f"  [OK] {ticker}: {len(raw)} days "
+                  f"({raw['date'].min().strftime('%Y-%m-%d')} -> "
                   f"{raw['date'].max().strftime('%Y-%m-%d')})")
 
         if len(raw) < MIN_HISTORY_DAYS:
@@ -486,7 +486,7 @@ def _fundamentals_sec_impl(
         )
 
         if monthly_fund.dropna(how="all").shape[0] < MIN_SEC_ROWS:
-            print(f"only {monthly_fund.dropna(how='all').shape[0]} non-null rows — skipping")
+            print(f"only {monthly_fund.dropna(how='all').shape[0]} non-null rows -- skipping")
             skipped.append(ticker)
             continue
 

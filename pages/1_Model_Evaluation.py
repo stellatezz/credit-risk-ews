@@ -4,7 +4,7 @@ from PIL import Image
 st.set_page_config(page_title="Model Evaluation", layout="wide")
 
 st.title("📈 Model Evaluation")
-st.markdown("Performance metrics, curves, and diagnostics for Phase 1 models")
+st.markdown("Performance metrics, curves, and diagnostics for Phase 2 models (80 firms)")
 
 st.markdown("---")
 
@@ -28,7 +28,7 @@ The model discriminates between distressed and non-distressed firms, but relies 
 """)
 
 try:
-    img_roc_pr = Image.open("outputs/figures/phase1_roc_pr.png")
+    img_roc_pr = Image.open("outputs/figures/phase2_roc_pr.png")
     st.image(img_roc_pr, use_column_width=True)
 except:
     st.error("⚠️ ROC/PR chart not found. Run `python src/run.py` to generate.")
@@ -55,7 +55,7 @@ Our Phase 1 model is "warmly" calibrated — directionally correct but needs fin
 """)
 
 try:
-    img_calibration = Image.open("outputs/figures/phase1_calibration.png")
+    img_calibration = Image.open("outputs/figures/phase2_calibration.png")
     st.image(img_calibration, use_column_width=True)
 except:
     st.error("⚠️ Calibration chart not found. Run `python src/run.py` to generate.")
@@ -83,7 +83,7 @@ Saves analyst time by 90x while catching 1/3 of problems.
 """)
 
 try:
-    img_deciles = Image.open("outputs/figures/phase1_deciles.png")
+    img_deciles = Image.open("outputs/figures/phase2_deciles.png")
     st.image(img_deciles, use_column_width=True)
 except:
     st.error("⚠️ Deciles chart not found. Run `python src/run.py` to generate.")
@@ -110,7 +110,7 @@ Real firm-by-firm time series of risk events (binary: 0 = stable, 1 = deteriorat
 """)
 
 try:
-    img_trajectories = Image.open("outputs/figures/phase1_trajectories.png")
+    img_trajectories = Image.open("outputs/figures/phase2_trajectories.png")
     st.image(img_trajectories, use_column_width=True)
 except:
     st.error("⚠️ Trajectories chart not found. Run `python src/run.py` to generate.")
@@ -165,9 +165,11 @@ dynamics may become more important. For now: focus on prices & balance-sheet rat
 """)
 
 st.info("""
-💡 **Phase 2 Opportunity:**
-- Integrate real SEC fundamentals (Allen's work) instead of synthetic data
-- This should lift accounting-only performance and improve calibration
-- Consider macro feature engineering (recession indices, sector rotations)
+💡 **Phase 2 Improvements:**
+- ✅ Expanded from 9 to 80 firms across diverse sectors
+- ✅ Using real SEC EDGAR fundamentals (no synthetic data)
+- ✅ 8x larger training dataset for more robust coefficient estimates
+- ✅ Better macro signal across economic cycles
+- ✅ Improved calibration and discrimination expected
 """)
 

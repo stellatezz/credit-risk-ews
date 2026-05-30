@@ -25,24 +25,118 @@ class PATHS:
 
 
 # -----------------------------------------------------------------------------
-# Firm universe — Phase 1 prototype (10 firms)
+# Firm universe — Phase 2 (80 firms)
 # -----------------------------------------------------------------------------
-# README says "9-firm toy panel" but the code has always had 10 (CHK was added
-# post-README). Reconciliation: the charts render only 9 panels because CHK's
-# yfinance history post-bankruptcy is incomplete — one trajectory subplot
-# stays empty. Count in code: 10. Count in charts: 9. Update README in a
-# follow-up; not blocking this refactor.
+# Expanded from Phase 1 (10 firms) to cover 80 US-listed non-financial firms
+# across Technology, Consumer, Industrials, Energy, Healthcare, REITs, and Telecom.
 FIRMS = {
+    # =========================================================================
+    # Phase 1 Core (10 firms)
+    # =========================================================================
     "GE":   {"name": "General Electric",     "industry": "Industrial"},
-    "F":    {"name": "Ford Motor",            "industry": "Consumer"},
+    "F":    {"name": "Ford Motor",            "industry": "Auto"},
     "BBBY": {"name": "Bed Bath & Beyond",     "industry": "Retail"},
     "XOM":  {"name": "Exxon Mobil",           "industry": "Energy"},
     "CHK":  {"name": "Chesapeake Energy",     "industry": "Energy"},
     "INTC": {"name": "Intel",                 "industry": "Technology"},
     "SNAP": {"name": "Snap Inc",              "industry": "Technology"},
     "PFE":  {"name": "Pfizer",                "industry": "Healthcare"},
-    "SPG":  {"name": "Simon Property Group",  "industry": "RealEstate"},
+    "SPG":  {"name": "Simon Property Group",  "industry": "Real Estate"},
     "AAL":  {"name": "American Airlines",     "industry": "Airlines"},
+
+    # =========================================================================
+    # Phase 2 Expansion A: Technology and Communication Services (15 firms)
+    # =========================================================================
+    "AAPL": {"name": "Apple",                 "industry": "Technology"},
+    "MSFT": {"name": "Microsoft",             "industry": "Technology"},
+    "NVDA": {"name": "Nvidia",                "industry": "Semiconductors"},
+    "AMD":  {"name": "AMD",                   "industry": "Semiconductors"},
+    "MU":   {"name": "Micron",                "industry": "Semiconductors"},
+    "CSCO": {"name": "Cisco",                 "industry": "Technology"},
+    "ORCL": {"name": "Oracle",                "industry": "Technology"},
+    "CRM":  {"name": "Salesforce",            "industry": "Software"},
+    "IBM":  {"name": "IBM",                   "industry": "Technology"},
+    "META": {"name": "Meta",                  "industry": "Communication"},
+    "GOOGL":{"name": "Alphabet",              "industry": "Communication"},
+    "NFLX": {"name": "Netflix",               "industry": "Media"},
+    "PYPL": {"name": "PayPal",                "industry": "Fintech"},
+    "SQ":   {"name": "Block",                 "industry": "Fintech"},
+    "UBER": {"name": "Uber",                  "industry": "Platform"},
+
+    # =========================================================================
+    # Phase 2 Expansion B: Consumer Discretionary, Retail, and Autos (15 firms)
+    # =========================================================================
+    "AMZN": {"name": "Amazon",                "industry": "Retail"},
+    "TSLA": {"name": "Tesla",                 "industry": "Auto"},
+    "GM":   {"name": "General Motors",        "industry": "Auto"},
+    "HD":   {"name": "Home Depot",            "industry": "Retail"},
+    "LOW":  {"name": "Lowe's",                "industry": "Retail"},
+    "NKE":  {"name": "Nike",                  "industry": "Consumer"},
+    "SBUX": {"name": "Starbucks",             "industry": "Consumer"},
+    "MCD":  {"name": "McDonald's",            "industry": "Consumer"},
+    "TGT":  {"name": "Target",                "industry": "Retail"},
+    "WMT":  {"name": "Walmart",               "industry": "Retail"},
+    "COST": {"name": "Costco",                "industry": "Retail"},
+    "M":    {"name": "Macy's",                "industry": "Retail"},
+    "KSS":  {"name": "Kohl's",                "industry": "Retail"},
+    "GPS":  {"name": "Gap",                   "industry": "Retail"},
+    "ROST": {"name": "Ross Stores",           "industry": "Retail"},
+
+    # =========================================================================
+    # Phase 2 Expansion C: Industrials, Transport, and Aerospace (10 firms)
+    # =========================================================================
+    "BA":   {"name": "Boeing",                "industry": "Aerospace"},
+    "CAT":  {"name": "Caterpillar",           "industry": "Industrials"},
+    "DE":   {"name": "Deere",                 "industry": "Industrials"},
+    "MMM":  {"name": "3M",                    "industry": "Industrials"},
+    "HON":  {"name": "Honeywell",             "industry": "Industrials"},
+    "UPS":  {"name": "UPS",                   "industry": "Logistics"},
+    "FDX":  {"name": "FedEx",                 "industry": "Logistics"},
+    "DAL":  {"name": "Delta",                 "industry": "Airlines"},
+    "UAL":  {"name": "United Airlines",       "industry": "Airlines"},
+    "LUV":  {"name": "Southwest",             "industry": "Airlines"},
+
+    # =========================================================================
+    # Phase 2 Expansion D: Energy and Materials (10 firms)
+    # =========================================================================
+    "CVX":  {"name": "Chevron",               "industry": "Energy"},
+    "COP":  {"name": "ConocoPhillips",        "industry": "Energy"},
+    "OXY":  {"name": "Occidental Petroleum",  "industry": "Energy"},
+    "SLB":  {"name": "Schlumberger",          "industry": "Energy"},
+    "HAL":  {"name": "Halliburton",           "industry": "Energy"},
+    "FCX":  {"name": "Freeport-McMoRan",      "industry": "Materials"},
+    "NUE":  {"name": "Nucor",                 "industry": "Materials"},
+    "DOW":  {"name": "Dow",                   "industry": "Chemicals"},
+    "ALB":  {"name": "Albemarle",             "industry": "Materials"},
+    "MOS":  {"name": "Mosaic",                "industry": "Materials"},
+
+    # =========================================================================
+    # Phase 2 Expansion E: Healthcare and Defensive Firms (15 firms)
+    # =========================================================================
+    "JNJ":  {"name": "Johnson & Johnson",     "industry": "Healthcare"},
+    "MRK":  {"name": "Merck",                 "industry": "Healthcare"},
+    "ABBV": {"name": "AbbVie",                "industry": "Healthcare"},
+    "BMY":  {"name": "Bristol Myers Squibb",  "industry": "Healthcare"},
+    "GILD": {"name": "Gilead",                "industry": "Healthcare"},
+    "AMGN": {"name": "Amgen",                 "industry": "Healthcare"},
+    "MDT":  {"name": "Medtronic",             "industry": "Healthcare"},
+    "CVS":  {"name": "CVS Health",            "industry": "Healthcare"},
+    "UNH":  {"name": "UnitedHealth",          "industry": "Healthcare"},
+    "TMO":  {"name": "Thermo Fisher",         "industry": "Healthcare"},
+
+    # =========================================================================
+    # Phase 2 Expansion F: REITs, Telecom, and Staples (5 firms)
+    # =========================================================================
+    "AMT":  {"name": "American Tower",        "industry": "Real Estate"},
+    "PLD":  {"name": "Prologis",              "industry": "Real Estate"},
+    "O":    {"name": "Realty Income",         "industry": "Real Estate"},
+    "VTR":  {"name": "Ventas",                "industry": "Real Estate"},
+    "T":    {"name": "AT&T",                  "industry": "Telecom"},
+    "VZ":   {"name": "Verizon",               "industry": "Telecom"},
+    "KO":   {"name": "Coca-Cola",             "industry": "Staples"},
+    "PEP":  {"name": "PepsiCo",               "industry": "Staples"},
+    "PG":   {"name": "Procter & Gamble",      "industry": "Staples"},
+    "KHC":  {"name": "Kraft Heinz",           "industry": "Staples"},
 }
 
 TICKERS = list(FIRMS.keys())
@@ -51,11 +145,12 @@ TICKERS = list(FIRMS.keys())
 # Empty by default — add a ticker here only after deciding its short history
 # is acceptable for this panel.
 #
-# CHK (Chesapeake Energy): delisted post-bankruptcy (June 2020); yfinance
-# returns no data. Intentional skip — documented in 02_OUTPUTS.md as the
-# reason one trajectory subplot stays empty. The baseline Phase 1 panel was
-# built without CHK; the refactor preserves that behavior.
-ALLOWED_SHORT_HISTORY: set[str] = {"CHK"}
+# Phase 1: CHK (Chesapeake Energy): delisted post-bankruptcy (June 2020); yfinance
+# returns no data. Intentional inclusion for historical context.
+#
+# Phase 2: Some tickers may be newer IPOs or have incomplete historical pricing.
+# Review yfinance errors during first run and add tickers here as needed.
+ALLOWED_SHORT_HISTORY: set[str] = {"CHK","SQ","GPS"}  # Expand if needed during Phase 2 run
 
 # -----------------------------------------------------------------------------
 # Price-download window (daily prices; used by load_prices)

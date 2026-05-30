@@ -24,7 +24,7 @@ if selected_firm:
 
     try:
         # Load the panel
-        panel = pd.read_csv("data/processed/panel_phase1.csv")
+        panel = pd.read_csv("data/processed/panel_phase2.csv")
         firm_data = panel[panel['ticker'] == selected_firm].copy()
 
         if len(firm_data) == 0:

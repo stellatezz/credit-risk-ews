@@ -173,5 +173,5 @@ def robustness_rolling_window(df: pd.DataFrame) -> pd.DataFrame:
     rdf = pd.DataFrame(results)
     print(rdf.to_string(index=False))
     if len(rdf) > 0:
-        print(f"\nMean AUROC: {rdf['auroc'].mean():.4f} ± {rdf['auroc'].std():.4f}")
+        print(f"\nMean AUROC: {rdf['auroc'].mean():.4f} +/- {rdf['auroc'].std():.4f}")
     return rdf

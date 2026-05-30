@@ -34,7 +34,7 @@ def compute_label_a_from_prices(
     Implementation pivots to WIDE internally to reuse the original per-firm
     drawdown math — keeps the baseline panel SHA256 stable.
     """
-    print(f"\nComputing Label A (forward drawdown ≥ {abs(threshold):.0%})...")
+    print(f"\nComputing Label A (forward drawdown >= {abs(threshold):.0%})...")
 
     wide = (
         prices_df.pivot(index="date", columns="ticker", values="adj_close")
@@ -76,7 +76,7 @@ def compute_label_a_from_prices(
     print("\n  Per-firm event rates:")
     for ticker, row in firm_events.iterrows():
         name = FIRMS.get(ticker, {}).get("name", ticker)
-        bar = "█" * int(row["event_rate"] * 30)
+        bar = "#" * int(row["event_rate"] * 30)
         print(f"    {ticker:5s} ({name:25s}): {row['event_rate']:5.1%} "
               f"({int(row['events']):3d}/{int(row['months']):3d}) {bar}")
 
