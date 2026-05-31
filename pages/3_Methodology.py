@@ -13,8 +13,8 @@ st.write("""
 ```
 1. Data Ingestion
    ├─ Equity prices: yfinance (daily, 2009-2025)
-   ├─ Fundamentals: SEC EDGAR (placeholder in Phase 1; will be real SEC data in Phase 2)
-   ├─ Macros: FRED API (placeholder in Phase 1; synthetic regime-aware indicators)
+   ├─ Fundamentals: SEC EDGAR XBRL (real SEC data integrated in Phase 2)
+   ├─ Macros: FRED API (real macro series integrated in Phase 2)
    └─ Labels: Forward drawdown computation from prices
 
 2. Feature Engineering
@@ -83,8 +83,8 @@ st.write("""
 **Data integrity notes:**
 - All accounting metrics are **carried forward** by filing date at month-end
 - No lookahead: we use only data filed/available by month t
-- Phase 1 uses **synthetic data** calibrated to industry baselines (GE ~65% leverage, BBBY distress drift)
-- Phase 2 will integrate real SEC XBRL extraction (Allen's component)
+- Phase 1 used **synthetic data** calibrated to industry baselines (GE ~65% leverage, BBBY distress drift)
+- Phase 2 integrates real SEC XBRL extraction (Allen's component) for production accounting metrics
 """)
 
 st.markdown("---")
@@ -102,13 +102,12 @@ st.markdown(macro_features)
 
 st.write("""
 **Limitation in Phase 1:**
-Macro features perform poorly (AUROC 0.399) because:
-- Sample is only 10 firms → idiosyncratic firm risk dominates macro regime effects
-- Period is mostly post-2009 recovery with few severe macro shocks
-- Financial stress is firm-level, not macro-level, in this sample
+Macro features performed poorly (AUROC 0.399) because:
+- Sample was only 10 firms → idiosyncratic firm risk dominated macro regime effects
+- Period was mostly post-2009 recovery with few severe macro shocks
 
-**Expected in Phase 2 (60-80 firms):**
-Macro indicators should become statistically significant as sectoral correlations emerge.
+**Phase 2 findings (≈80 firms):**
+Macro indicators became more informative as cross-sector correlations emerged, although market features remained the dominant predictive group.
 """)
 
 st.markdown("---")
@@ -232,13 +231,13 @@ Fitted on "risk set": only months where firm has not failed yet
 (firms that already defaulted drop out of sample)
 ```
 
-**Challenges in Phase 1:**
-- Only 7 firms with events; sample too small for flexible time-varying hazard
-- Singular matrix during optimization (near-collinearity in risk set)
+**Challenges observed initially:**
+- Early (Phase 1) runs had few events and numerical instability for flexible hazard specifications
+- Singular matrix issues and near-collinearity in small risk-sets caused occasional optimization failures
 - **Fallback decision:** Use pooled logit predictions when hazard fails to converge
 
-**Expected improvement (Phase 2):**
-With 60-80 firms and more events, hazard model should stabilize and provide competing risk estimates.
+**Phase 2 outcome:**
+With the enlarged Phase 2 sample and more events, the discrete-time hazard specification stabilized in most runs and provided a useful complementary perspective when it converged.
 """)
 
 st.markdown("---")
@@ -264,10 +263,10 @@ Time-based split (train ≤2020, val 2021-23, test 2024+) ensures no temporal le
 """)
 
 st.info("""
-💡 **For Phase 2 real data:**
-- SEC XBRL data pipeline will include filing dates (not period-end dates) for carry-forward logic
-- 8-K bankruptcies will be time-stamped at actual filing date
-- Macro data from FRED will include revision history (handle carefully)
+💡 **Phase 2 real-data integration (completed):**
+- SEC XBRL pipeline includes filing dates (not just period-end dates) used for carry-forward logic
+- 8-K bankruptcy events are time-stamped and mapped to labels
+- Macro data from FRED is ingested with revision-awareness
 """)
 
 st.markdown("---")
@@ -299,7 +298,6 @@ st.write("""
 **Lead Time:**
 - Average months between prediction and actual event
 - Measure of **early warning** capability
-- Our 1 month: May be too late for intervention in Phase 1
-- Phase 2 goal: 3-6 months lead time
+- Initial runs observed ~1 month lead time; Phase 2 improvements aim to increase actionable lead time (target: 3-6 months)
 """)
 

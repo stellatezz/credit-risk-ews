@@ -3,7 +3,7 @@ import streamlit as st
 st.set_page_config(page_title="About", layout="wide")
 
 st.title("📚 About This Project")
-st.markdown("Credit Risk Early-Warning System (EWS) — Phase 1 Prototype")
+st.markdown("Credit Risk Early-Warning System (EWS) — Phase 2 Results and Dashboard")
 
 st.markdown("---")
 
@@ -27,7 +27,7 @@ with col1:
     - SEC EDGAR XBRL extraction
     - Accounting ratio construction
     - Filing-date carry-forward logic
-    - Phase 2: Real data integration
+    - Phase 2: Real data integration (completed)
     """)
 
 with col2:
@@ -36,7 +36,7 @@ with col2:
     **Responsibility:** Labels & Filing Signals
     - Label A (forward drawdown) construction
     - 12b-25 late filing flags
-    - Phase 2: 8-K bankruptcy mapping (Label B)
+    - Phase 2: 8-K bankruptcy mapping (Label B) (completed)
     """)
 
     st.subheader("Ivan")
@@ -67,8 +67,8 @@ phases = """
 | Phase | Duration | Scope | Status |
 |-------|----------|-------|--------|
 | **Phase 1** | Apr 15 - May 13 | 9 firms, toy pipeline, Label A, pooled logit | ✅ Complete |
-| **Phase 2** | May 13 - Jun 01 | 60-80 firms, full pipeline, real data integration, ablation | 🚧 In Progress |
-| **Phase 3** | Jun 01 - Jun 15| Robustness testing, threshold sensitivity, final model selection | ⏳ Upcoming |
+| **Phase 2** | May 13 - Jun 01 | ~80 firms, full pipeline, real SEC data, ablation & evaluation | ✅ Complete |
+| **Phase 3** | Jun 01 - Jun 15| Robustness testing, threshold sensitivity, final model selection | ⏳ In Progress |
 | **Phase 4** | Jun - Jul | Report writing, presentation, webpage, oral exam | ⏳ Upcoming |
 """
 st.markdown(phases)
@@ -94,7 +94,7 @@ st.write("""
 **Accounting Data (Fundamentals) — Phase 2:**
 - Source: SEC EDGAR (companyfacts endpoint)
 - CIK lookups + XBRL extraction
-- Allen's component (not yet integrated)
+- Allen's component integrated into pipeline
 
 **Macro Data — Phase 1:**
 - Source: **Placeholder (synthetic)**
@@ -114,7 +114,7 @@ st.write("""
 
 **8-K Filings (Label B) — Phase 2:**
 - Source: SEC EDGAR (Form 8-K, Item 1.03)
-- Darren's component (not yet integrated)
+- Darren's mapping component integrated into pipeline
 """)
 
 st.markdown("---")

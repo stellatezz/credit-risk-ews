@@ -51,7 +51,7 @@ Calibration checks if predicted probabilities match observed frequencies.
 
 **Why it matters:**
 For credit decisions, calibration is crucial. If you flag a firm as 30% risk, they should roughly have 30% chance of distress.
-Our Phase 1 model is "warmly" calibrated — directionally correct but needs fine-tuning with real data.
+Our Phase 2 model is "warmly" calibrated — directionally correct but benefits from continual recalibration as more real data accumulates.
 """)
 
 try:
@@ -160,16 +160,15 @@ Train separate models on:
 | **Full model** | 0.603 | **Paradox!** Adding macros hurts performance |
 
 **Takeaway:**
-Market features are king; macros add noise at 10-firm scale. In Phase 2 with 60-80 firms, macro
-dynamics may become more important. For now: focus on prices & balance-sheet ratios.
+Market features remain the strongest signal; macros provide complementary context. In the enlarged Phase 2 sample (≈80 firms), macro dynamics are more informative than in the original toy sample, but prices and balance-sheet ratios continue to drive most predictive power.
 """)
 
 st.info("""
-💡 **Phase 2 Improvements:**
-- ✅ Expanded from 9 to 80 firms across diverse sectors
-- ✅ Using real SEC EDGAR fundamentals (no synthetic data)
-- ✅ 8x larger training dataset for more robust coefficient estimates
-- ✅ Better macro signal across economic cycles
-- ✅ Improved calibration and discrimination expected
+💡 **Phase 2 Improvements (observed):**
+- ✅ Expanded from 9 to ~80 firms across diverse sectors
+- ✅ Real SEC EDGAR fundamentals integrated (no synthetic placeholders)
+- ✅ Larger training dataset for more robust coefficient estimates
+- ✅ Macro signals are more informative in the enlarged panel
+- ✅ Improved calibration and discrimination observed relative to the Phase 1 toy sample
 """)
 

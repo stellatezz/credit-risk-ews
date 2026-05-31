@@ -140,11 +140,21 @@ if selected_firm:
 
             st.header("💡 Key Observations for {0}".format(selected_firm))
 
-            distress_periods = firm_data[firm_data['label_a'] == 1]
+            distress_periods = firm_data[firm_data['label_a'] == 1].copy()
             if len(distress_periods) > 0:
                 st.write(f"**Distress records:** {len(distress_periods)}")
                 st.write("**Months with distress indicator:**")
-                st.write(distress_periods[['date', 'label_a', 'ret_6m', 'drawdown_12m', 'leverage']].to_string())
+                # Format for readable table
+                display_df = distress_periods[['date', 'label_a', 'ret_6m', 'drawdown_12m', 'leverage']].copy()
+                display_df['date'] = pd.to_datetime(display_df['date']).dt.strftime('%Y-%m')
+                display_df = display_df.rename(columns={
+                    'date': 'Month',
+                    'label_a': 'Distress',
+                    'ret_6m': 'Ret 6m',
+                    'drawdown_12m': 'Drawdown 12m',
+                    'leverage': 'Leverage'
+                })
+                st.table(display_df.reset_index(drop=True))
             else:
                 st.write("✅ No distress events recorded in this period.")
 
