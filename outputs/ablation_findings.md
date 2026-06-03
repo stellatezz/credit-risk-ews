@@ -13,7 +13,7 @@
 | Accounting only |  4 | 0.570 |    0.536 |    0.608 | 0.205 | 0.106 |
 | Market only     |  6 | 0.678 |    0.651 |    0.704 | 0.206 | 0.103 |
 | Macro only      |  3 | 0.344 |    0.313 |    0.375 | 0.088 | 0.116 |
-| Filing only     |  1 | 0.473 |    0.450 |    0.502 | 0.115 | 0.108 |
+| Filing only     |  1 | 0.473 |    0.450 |    0.502 | 0.115 | 0.107 |
 | Acct + Market   | 10 | 0.644 |    0.609 |    0.674 | 0.213 | 0.103 |
 | Full model      | 14 | 0.595 |    0.564 |    0.628 | 0.217 | 0.104 |
 
@@ -25,13 +25,13 @@ Market features alone (AUROC 0.678, CI [0.651, 0.704]) are the dominant predicto
 
 ## What carries the signal
 
-- **Market features (AUROC 0.678, CI [0.651, 0.704]):** The strongest single group by a clear margin. Six market features — including 1-month return, 3-month volatility, and 12-month drawdown — capture the bulk of predictable credit-risk variation on this panel. The CI lower bound exceeds every other group's point estimate except Acct + Market, confirming this is not a noise result.
+- **Market features (AUROC 0.678, CI [0.651, 0.704]):** The strongest single group by a clear margin. Six market features — including 1-month return, 3-month volatility, and 12-month drawdown — capture the bulk of predictable credit-risk variation on this panel. The CI lower bound (0.651) exceeds the point estimate of every other group, including Acct + Market (0.644), confirming this is not a noise result.
 
-- **Accounting features (AUROC 0.570, CI [0.536, 0.608]):** Meaningful signal above coin-flip — real SEC fundamentals (leverage, liquidity buffer, working capital ratio, profitability) push AUROC about 7 points above 0.5 — but the CI lies entirely below Market only. When combined with market features (Acct + Market: 0.644, CI [0.609, 0.674]), performance improves over accounting alone but still falls short of Market only, suggesting accounting features partially overlap with or add noise relative to the market signal at this sample size.
+- **Accounting features (AUROC 0.570, CI [0.536, 0.608]):** Meaningful signal above coin-flip. Real SEC fundamentals (leverage, liquidity buffer, working capital ratio, profitability) push AUROC about 7 points above 0.5, but the CI lies entirely below Market only. When combined with market features (Acct + Market: 0.644, CI [0.609, 0.674]), performance improves over accounting alone but still falls short of Market only, suggesting accounting features partially overlap with or add noise relative to the market signal at this sample size.
 
-- **Macro features (AUROC 0.344, CI [0.313, 0.375]):** Below 0.5, meaning the macro features (VIX, term spread, credit spread) are worse than a coin flip on this panel. Their CI is entirely below 0.5. Flipping the sign of the macro predictions would produce a model with AUROC ≈ 0.656 — which would rank second. This is consistent with the Phase 1 prototype observation that macro features may capture risk-on periods (low VIX, tight spreads) as safe when those are exactly the conditions preceding latent distress buildup. At Phase 2 scale this reversal is statistically reliable.
+- **Macro features (AUROC 0.344, CI [0.313, 0.375]):** Below 0.5, meaning the macro features (VIX, term spread, credit spread) are worse than a coin flip on this panel. Their CI is entirely below 0.5. Flipping the sign of the macro predictions would produce a model with AUROC ≈ 0.656 — which would rank second. This is consistent with the Phase 1 prototype observation that macro features may capture risk-on periods (low VIX, tight spreads) as safe when those are exactly the conditions preceding latent distress buildup. At Phase 2 scale the CI lies entirely below 0.5, ruling out coin-flip at the 95% level.
 
-- **Filing features (`late_filing` alone, AUROC 0.473, CI [0.450, 0.502]):** Essentially no signal — the CI straddles and lies just below 0.5. A single binary indicator for late SEC filings does not discriminate 12-month deterioration events on the Phase 2 panel. Its coefficient in the full model (OR 1.11, p = 0.26) is also non-significant, confirming the filing indicator's predictive content is negligible at this event rate and panel composition.
+- **Filing features (`late_filing` alone, AUROC 0.473, CI [0.450, 0.502]):** Essentially no signal. The CI straddles 0.5 (upper bound 0.502), so the discriminative value of a single binary indicator for late SEC filings cannot be distinguished from chance on the Phase 2 panel. The filing indicator's predictive content is negligible at this event rate and panel composition.
 
 ## Limitations
 
