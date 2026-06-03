@@ -36,7 +36,8 @@ panel_path = os.path.join(PATHS.PROCESSED, "panel_phase2.csv")
 assert os.path.isfile(panel_path), f"missing panel: {panel_path} — run pipeline first"
 panel = pd.read_csv(panel_path)
 train = panel[panel["year"] <= 2020]
-test = panel[panel["year"] > 2020]
+# Match pipeline's val split (2021-2023), so the CSV the test writes equals the pipeline's canonical CSV.
+test = panel[(panel["year"] > 2020) & (panel["year"] <= 2023)]
 
 print("\n[1] ablation_analysis produces Filing only row")
 rdf = ablation_analysis(train, test)
