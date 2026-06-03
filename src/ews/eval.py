@@ -13,6 +13,8 @@ the 3-tier fallback policy.
 
 from __future__ import annotations
 
+import os
+
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
@@ -22,7 +24,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from .config import FEATURE_COLS, FIRMS, LABEL_COL, LEAD_TIME_THRESHOLD, TOP_K_FRACTION
+from .config import FEATURE_COLS, FIRMS, LABEL_COL, LEAD_TIME_THRESHOLD, PATHS, TOP_K_FRACTION
 
 
 # =============================================================================
@@ -117,6 +119,7 @@ def ablation_analysis(train: pd.DataFrame, test: pd.DataFrame) -> pd.DataFrame:
         "Accounting only":   ["leverage", "liquidity_buffer", "wc_ratio", "profitability"],
         "Market only":       ["ret_1m", "ret_3m", "ret_6m", "vol_3m", "vol_6m", "drawdown_12m"],
         "Macro only":        ["vix", "term_spread", "credit_spread"],
+        "Filing only":       ["late_filing"],
         "Acct + Market":     ["leverage", "liquidity_buffer", "wc_ratio", "profitability",
                               "ret_1m", "ret_3m", "ret_6m", "vol_3m", "vol_6m", "drawdown_12m"],
         "Full model":        FEATURE_COLS,
@@ -139,6 +142,12 @@ def ablation_analysis(train: pd.DataFrame, test: pd.DataFrame) -> pd.DataFrame:
             print(f"  {name}: failed ({e})")
     rdf = pd.DataFrame(results)
     print("\n" + rdf.round(4).to_string(index=False))
+
+    os.makedirs(PATHS.OUTPUTS, exist_ok=True)
+    out_path = os.path.join(PATHS.OUTPUTS, "ablation_results.csv")
+    rdf.to_csv(out_path, index=False)
+    print(f"\n  Saved ablation results to: outputs/ablation_results.csv")
+
     return rdf
 
 
