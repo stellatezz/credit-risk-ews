@@ -21,7 +21,8 @@ class PATHS:
     RAW = os.path.join(DATA_DIR, "raw")
     INTERIM = os.path.join(DATA_DIR, "interim")
     PROCESSED = os.path.join(DATA_DIR, "processed")
-    FIGURES = os.path.join(REPO_ROOT, "outputs", "figures")
+    OUTPUTS = os.path.join(REPO_ROOT, "outputs")
+    FIGURES = os.path.join(OUTPUTS, "figures")
 
 
 # -----------------------------------------------------------------------------
