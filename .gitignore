@@ -25,3 +25,6 @@ outputs/figures/_baseline/
 spec.md
 proposal.md
 DASHBOARD_README.md
+
+# Generated outputs
+outputs/ablation_results.csv

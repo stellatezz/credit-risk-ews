@@ -146,7 +146,7 @@ def ablation_analysis(train: pd.DataFrame, test: pd.DataFrame) -> pd.DataFrame:
     os.makedirs(PATHS.OUTPUTS, exist_ok=True)
     out_path = os.path.join(PATHS.OUTPUTS, "ablation_results.csv")
     rdf.to_csv(out_path, index=False)
-    print(f"\n  Saved ablation results to: outputs/ablation_results.csv")
+    print(f"\n  Saved ablation results to: {out_path}")
 
     return rdf
 
