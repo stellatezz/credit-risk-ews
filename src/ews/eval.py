@@ -62,6 +62,40 @@ def evaluate_model(
 
 
 # =============================================================================
+# Bootstrap CI helper (used by ablation_analysis)
+# =============================================================================
+
+def _bootstrap_auroc_ci(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    n_boot: int = 200,
+    alpha: float = 0.05,
+    seed: int = 42,
+) -> tuple[float, float]:
+    """Percentile bootstrap CI for AUROC.
+
+    Resamples rows with replacement `n_boot` times, computes AUROC per resample,
+    returns the (alpha/2, 1-alpha/2) percentiles. Resamples that draw only one
+    class are skipped (AUROC undefined). Returns (nan, nan) if no resample is
+    usable.
+    """
+    rng = np.random.default_rng(seed)
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+    n = len(y_true)
+    aurocs: list[float] = []
+    for _ in range(n_boot):
+        idx = rng.integers(0, n, n)
+        if len(np.unique(y_true[idx])) < 2:
+            continue
+        aurocs.append(roc_auc_score(y_true[idx], y_pred[idx]))
+    if not aurocs:
+        return float("nan"), float("nan")
+    lo, hi = np.percentile(aurocs, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    return float(lo), float(hi)
+
+
+# =============================================================================
 # Lead time
 # =============================================================================
 
@@ -131,12 +165,18 @@ def ablation_analysis(train: pd.DataFrame, test: pd.DataFrame) -> pd.DataFrame:
         try:
             m = sm.Logit(train[LABEL_COL], sm.add_constant(train[cols])).fit(disp=0)
             p = m.predict(sm.add_constant(test[cols]))
+            y_true = test[LABEL_COL].values
+            y_pred = p.values if hasattr(p, "values") else np.asarray(p)
+            auroc = roc_auc_score(y_true, y_pred)
+            lo, hi = _bootstrap_auroc_ci(y_true, y_pred)
             results.append({
                 "Feature set": name,
                 "N": len(cols),
-                "AUROC": roc_auc_score(test[LABEL_COL], p),
-                "AUPRC": average_precision_score(test[LABEL_COL], p),
-                "Brier": brier_score_loss(test[LABEL_COL], p),
+                "AUROC": auroc,
+                "AUROC_lo": lo,
+                "AUROC_hi": hi,
+                "AUPRC": average_precision_score(y_true, y_pred),
+                "Brier": brier_score_loss(y_true, y_pred),
             })
         except Exception as e:
             print(f"  {name}: failed ({e})")

@@ -62,6 +62,24 @@ if os.path.isfile(csv_path):
         f"csv={len(persisted)} vs memory={len(rdf)}",
     )
 
+print("\n[3] bootstrap CI columns present and well-formed")
+check(
+    "AUROC_lo column present",
+    "AUROC_lo" in rdf.columns,
+    f"columns: {list(rdf.columns)}",
+)
+check(
+    "AUROC_hi column present",
+    "AUROC_hi" in rdf.columns,
+    f"columns: {list(rdf.columns)}",
+)
+if {"AUROC_lo", "AUROC_hi"}.issubset(rdf.columns):
+    bracketed = ((rdf["AUROC_lo"] <= rdf["AUROC"]) & (rdf["AUROC"] <= rdf["AUROC_hi"])).all()
+    check("each AUROC sits inside its own CI", bool(bracketed),
+          rdf[["Feature set", "AUROC_lo", "AUROC", "AUROC_hi"]].to_string(index=False))
+    nontrivial = ((rdf["AUROC_hi"] - rdf["AUROC_lo"]) > 0).all()
+    check("CI widths are nonzero", bool(nontrivial))
+
 print("\n" + "=" * 60)
 if FAILURES:
     print(f"ABLATION TEST FAILED — {len(FAILURES)} assertion(s) failed:")
