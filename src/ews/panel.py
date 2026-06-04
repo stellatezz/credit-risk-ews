@@ -29,6 +29,10 @@ ASCII merge pipeline:
                                           sort by (ticker, date)
                                                     │
                                                     ▼
+                                          impute wc_ratio NaN → 0
+                                          + emit wc_ratio_missing
+                                                    │
+                                                    ▼
                                           dropna on FEATURE_COLS + label_a
                                                     │
                                                     ▼
