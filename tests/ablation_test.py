@@ -170,6 +170,27 @@ if "model_family" in rdf.columns:
             f"{fam}: {n_subsets} rows",
         )
 
+print("\n[7] full-model coefficient sidecars persisted")
+coef_pooled = os.path.join(PATHS.OUTPUTS, "full_model_coefficients_pooled.csv")
+check(
+    "full_model_coefficients_pooled.csv exists",
+    os.path.isfile(coef_pooled),
+    coef_pooled,
+)
+if os.path.isfile(coef_pooled):
+    coef_df = pd.read_csv(coef_pooled)
+    expected = {"feature", "coef", "std_err", "p_value"}
+    check(
+        "coefficient CSV has required columns",
+        expected.issubset(set(coef_df.columns)),
+        f"got {sorted(coef_df.columns)}",
+    )
+    check(
+        "coefficient CSV has one row per feature (≥ 14 features + const)",
+        len(coef_df) >= 15,
+        f"rows={len(coef_df)}",
+    )
+
 print("\n" + "=" * 60)
 if FAILURES:
     print(f"ABLATION TEST FAILED — {len(FAILURES)} assertion(s) failed:")

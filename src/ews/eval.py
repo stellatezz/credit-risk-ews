@@ -183,6 +183,62 @@ MODEL_FAMILIES: dict[str, callable] = {
 
 
 # =============================================================================
+# Coefficient persistence (Full model per family)
+# =============================================================================
+
+def persist_full_model_coefficients(
+    train: pd.DataFrame,
+    family_name: str,
+    fit_fn: callable | None = None,
+) -> str:
+    """Fit the Full model with the given family and write its coefficient table
+    to `outputs/full_model_coefficients_<family>.csv`.
+
+    Persists: feature, coef, std_err, p_value.
+    Returns the absolute output path written.
+    """
+    fit_fn = fit_fn or MODEL_FAMILIES[family_name]
+
+    # We need the fitted statsmodels Results object, not just predictions,
+    # to read coefficients. Inline the fit here so we can keep the wrappers
+    # in MODEL_FAMILIES focused on predictions.
+    cols = FEATURE_COLS
+    if family_name == "pooled":
+        m = sm.Logit(train[LABEL_COL], sm.add_constant(train[cols])).fit(disp=0)
+        names = ["const"] + cols
+    elif family_name == "fe":
+        train_fe = pd.concat([
+            train[cols].reset_index(drop=True),
+            pd.get_dummies(train["industry"], prefix="ind", drop_first=False).astype(float).reset_index(drop=True),
+            pd.get_dummies(train["year"], prefix="yr", drop_first=False).astype(float).reset_index(drop=True),
+        ], axis=1)
+        m = sm.Logit(train[LABEL_COL].reset_index(drop=True), sm.add_constant(train_fe)).fit(disp=0)
+        names = ["const"] + list(train_fe.columns)
+    elif family_name == "hazard":
+        tr = train.copy().sort_values(["ticker", "date"])
+        tr["months_obs"] = tr.groupby("ticker").cumcount() + 1
+        tr["log_duration"] = np.log(tr["months_obs"])
+        X = sm.add_constant(tr[cols + ["log_duration"]])
+        m = sm.Logit(tr[LABEL_COL], X).fit(disp=0)
+        names = ["const"] + cols + ["log_duration"]
+    else:
+        raise ValueError(f"unknown family: {family_name}")
+
+    coef_df = pd.DataFrame({
+        "feature": names,
+        "coef": m.params.values,
+        "std_err": m.bse.values,
+        "p_value": m.pvalues.values,
+    })
+
+    os.makedirs(PATHS.OUTPUTS, exist_ok=True)
+    out_path = os.path.join(PATHS.OUTPUTS, f"full_model_coefficients_{family_name}.csv")
+    coef_df.to_csv(out_path, index=False)
+    print(f"  Saved {family_name} full-model coefficients to: {out_path}")
+    return out_path
+
+
+# =============================================================================
 # Lead time
 # =============================================================================
 

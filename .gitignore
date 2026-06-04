@@ -28,3 +28,4 @@ DASHBOARD_README.md
 
 # Generated outputs
 outputs/ablation_results.csv
+outputs/full_model_coefficients_*.csv

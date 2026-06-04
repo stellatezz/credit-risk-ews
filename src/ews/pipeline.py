@@ -157,6 +157,14 @@ def main() -> None:
             _warn(f"{name} chart failed: {e}")
 
     # -- Diagnostics (tier-3: warn + continue) ------------------------------
+    from .eval import persist_full_model_coefficients  # local import to keep top clean
+
+    for family in ("pooled", "fe", "hazard"):
+        try:
+            persist_full_model_coefficients(train, family)
+        except Exception as e:
+            _warn(f"Coefficient persist for {family} failed: {e}")
+
     try:
         ablation_analysis(train, eval_data)
     except Exception as e:
