@@ -24,9 +24,9 @@
 | pooled       | Macro only      |  3 | 0.342 |    0.277 |    0.401 | 0.083 | 0.114 |
 | pooled       | Filing only     |  1 | 0.474 |    0.445 |    0.498 | 0.109 | 0.102 |
 | pooled       | Acct + Market   | 11 | 0.615 |    0.487 |    0.727 | 0.190 | 0.099 |
-| pooled       | Full model      | 15 | 0.551 |    0.432 |    0.660 | 0.198 | 0.102 |
+| pooled       | Full model      | 15 | 0.551 |    0.432 |    0.660 | 0.197 | 0.102 |
 | fe           | Market only     |  6 | 0.637 |    0.510 |    0.752 | 0.190 | 0.108 |
-| fe           | Macro only      |  3 | 0.602 |    0.490 |    0.717 | 0.171 | 0.110 |
+| fe           | Macro only      |  3 | 0.602 |    0.490 |    0.717 | 0.170 | 0.110 |
 | fe           | Filing only     |  1 | 0.621 |    0.527 |    0.718 | 0.170 | 0.106 |
 | fe           | Full model      | 15 | 0.646 |    0.521 |    0.764 | 0.189 | 0.111 |
 | hazard       | Accounting only |  5 | 0.530 |    0.397 |    0.652 | 0.181 | 0.102 |
@@ -54,7 +54,7 @@ On firm-clustered CIs, all per-family subset rankings are within bootstrap noise
 
 Reading `outputs/full_model_coefficients_pooled.csv`: three macro features — `liquidity_buffer`, `vix`, and `credit_spread` — have pooled coefficients whose signs contradict credit-risk theory, and all three are statistically significant.
 
-- `liquidity_buffer`: coef = +1.802 (SE = 0.436, p < 0.001). Credit-risk theory predicts a negative coefficient — more cash reserves lower default risk. The fitted positive sign means the pooled model predicts higher distress probability for firms with more liquidity. This is a within-sample overfitting artefact: high-growth, high-cash firms (tech, biotech) also happen to have elevated volatility and drawdowns, so the model conflates a balance-sheet buffer with a growth-risk profile.
+- `liquidity_buffer`: coef = +1.801 (SE = 0.436, p < 0.001). Credit-risk theory predicts a negative coefficient — more cash reserves lower default risk. The fitted positive sign means the pooled model predicts higher distress probability for firms with more liquidity. This is a within-sample overfitting artefact: high-growth, high-cash firms (tech, biotech) also happen to have elevated volatility and drawdowns, so the model conflates a balance-sheet buffer with a growth-risk profile.
 
 - `vix`: coef = -0.061 (SE = 0.009, p < 0.001). Credit-risk theory predicts positive — high VIX signals stress regime and precedes elevated default rates. The fitted negative sign means the pooled model predicts lower distress during high-VIX periods. The 2010–2020 training window was a prolonged low-rate expansion where VIX spikes (2011, 2015–16, 2018) were followed by rapid recoveries, so the model learns that high VIX is transient, not persistent stress.
 
