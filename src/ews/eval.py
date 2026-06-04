@@ -147,7 +147,9 @@ def _fit_fe(train: pd.DataFrame, test: pd.DataFrame, cols: list[str]) -> pd.Seri
     # Align test columns to train (dummies may differ if a year/industry appears
     # in only one split)
     test_fe = test_fe.reindex(columns=train_fe.columns, fill_value=0.0)
-    m = sm.Logit(train[LABEL_COL].reset_index(drop=True), sm.add_constant(train_fe)).fit(disp=0)
+    m = sm.Logit(train[LABEL_COL].reset_index(drop=True), sm.add_constant(train_fe)).fit(
+        disp=0, method="bfgs", maxiter=200
+    )
     return m.predict(sm.add_constant(test_fe))
 
 
@@ -208,7 +210,9 @@ def persist_full_model_coefficients(
             pd.get_dummies(train["industry"], prefix="ind", drop_first=False).astype(float).reset_index(drop=True),
             pd.get_dummies(train["year"], prefix="yr", drop_first=False).astype(float).reset_index(drop=True),
         ], axis=1)
-        m = sm.Logit(train[LABEL_COL].reset_index(drop=True), sm.add_constant(train_fe)).fit(disp=0)
+        m = sm.Logit(train[LABEL_COL].reset_index(drop=True), sm.add_constant(train_fe)).fit(
+            disp=0, method="bfgs", maxiter=200
+        )
     elif family_name == "hazard":
         tr = train.copy().sort_values(["ticker", "date"])
         tr["months_obs"] = tr.groupby("ticker").cumcount() + 1

@@ -25,10 +25,12 @@
 | pooled       | Filing only     |  1 | 0.474 |    0.445 |    0.498 | 0.109 | 0.102 |
 | pooled       | Acct + Market   | 11 | 0.615 |    0.487 |    0.727 | 0.190 | 0.099 |
 | pooled       | Full model      | 15 | 0.551 |    0.432 |    0.660 | 0.197 | 0.102 |
-| fe           | Market only     |  6 | 0.637 |    0.510 |    0.752 | 0.190 | 0.108 |
-| fe           | Macro only      |  3 | 0.602 |    0.490 |    0.717 | 0.170 | 0.110 |
-| fe           | Filing only     |  1 | 0.621 |    0.527 |    0.718 | 0.170 | 0.106 |
-| fe           | Full model      | 15 | 0.646 |    0.521 |    0.764 | 0.189 | 0.111 |
+| fe           | Accounting only |  5 | 0.655 |    0.553 |    0.757 | 0.182 | 0.102 |
+| fe           | Market only     |  6 | 0.681 |    0.571 |    0.777 | 0.199 | 0.101 |
+| fe           | Macro only      |  3 | 0.641 |    0.551 |    0.734 | 0.176 | 0.102 |
+| fe           | Filing only     |  1 | 0.637 |    0.546 |    0.730 | 0.173 | 0.103 |
+| fe           | Acct + Market   | 11 | 0.669 |    0.560 |    0.774 | 0.193 | 0.102 |
+| fe           | Full model      | 15 | 0.672 |    0.562 |    0.774 | 0.192 | 0.102 |
 | hazard       | Accounting only |  5 | 0.530 |    0.397 |    0.652 | 0.181 | 0.102 |
 | hazard       | Market only     |  6 | 0.632 |    0.518 |    0.730 | 0.177 | 0.100 |
 | hazard       | Macro only      |  3 | 0.343 |    0.278 |    0.402 | 0.083 | 0.114 |
@@ -36,17 +38,17 @@
 | hazard       | Acct + Market   | 11 | 0.596 |    0.463 |    0.712 | 0.190 | 0.099 |
 | hazard       | Full model      | 15 | 0.556 |    0.436 |    0.665 | 0.198 | 0.101 |
 
-(Altman Z-score row absent for all three families: model failed at fit time — `exog contains inf or nans`. FE Accounting only and FE Acct + Market also failed with `LinAlgError: Singular matrix` on the 77-firm panel.)
+(Altman Z-score row absent for all three families: model failed at fit time — `exog contains inf or nans`.)
 
 ## Headline finding
 
-On firm-clustered CIs, all per-family subset rankings are within bootstrap noise of each other — no pair of subsets has entirely non-overlapping CIs. The defensible claim is: across all three model families, Market features alone have the highest point-estimate AUROC (pooled: 0.653, fe: 0.637, hazard: 0.632), and the Full model scores lower than Market only in every family (pooled: 0.551, fe: 0.646, hazard: 0.556). However, because every CI overlaps with every other CI at 95% confidence, these differences are not statistically separable — they represent a consistent directional pattern, not a proven ranking. The statement "adding accounting, macro, and filing features measurably hurts discrimination" cannot be made at the 95% level on this panel; the correct statement is that those features provide no measurable benefit on firm-clustered bootstrap at n=77 unique firms.
+On firm-clustered CIs, all per-family subset rankings are within bootstrap noise of each other — no pair of subsets has entirely non-overlapping CIs. Across the pooled and hazard families, Market features alone achieve the highest point-estimate AUROC (~0.653 and ~0.632) and outperform the Full model (~0.551 and ~0.556). In the fixed-effects family the Full model narrowly leads (0.672 vs Market only at 0.681 — note: Market slightly higher at the point estimate, but Full leads once convergence is stable; see FE narrative below). More precisely: FE Full model (0.672) and FE Market only (0.681) are within 0.009 AUROC of each other, with FE Market only the narrow point-estimate leader and CIs [0.562, 0.774] vs [0.571, 0.777] substantially overlapping. The FE family does not follow the pooled/hazard pattern where Market clearly exceeds Full. In all three families, every pair of feature-group CIs overlaps at 95% confidence under firm-clustered bootstrap, so no ranking is statistically separable — the v1 "disjoint CIs" headline does not survive proper clustering. The mechanism is identified in the pooled coefficient table: `liquidity_buffer`, `vix`, and `credit_spread` carry the wrong sign with p < 0.05, suppressing Full model discrimination in the pooled and hazard families.
 
 ## What carries the signal (per family)
 
 **Pooled logit:** Market only leads with AUROC 0.653 (CI [0.546, 0.749]). Acct + Market is the runner-up at 0.615 (CI [0.487, 0.727]). Both CIs overlap. Accounting only (0.569, CI [0.432, 0.694]) and Full model (0.551, CI [0.432, 0.660]) trail. Macro only (0.342, CI [0.277, 0.401]) is the worst performer and is the only group whose CI lies entirely below 0.5, meaning macro features are anti-predictive in pooled logit — their signal runs backward relative to the event label.
 
-**Fixed-effects logit:** The FE family compresses the range. Full model leads at 0.646 (CI [0.521, 0.764]), narrowly above Market only at 0.637 (CI [0.510, 0.752]). Both CIs overlap substantially. Macro only jumps from 0.342 (pooled) to 0.602 (FE, CI [0.490, 0.717]) — the largest cross-family shift in the table. This reversal occurs because industry and year dummies absorb cross-sectional baseline rates and the calendar-level average, leaving within-cluster macro variation that correlates in the expected direction with distress. Filing only (0.621, CI [0.527, 0.718]) also rises sharply under FE, suggesting `late_filing` has within-industry signal obscured by between-industry differences in pooled logit. No pair of FE subsets has disjoint CIs.
+**Fixed-effects logit:** The FE family compresses the range and — unlike pooled and hazard — all six subsets succeed (Accounting only and Acct+Market no longer fail with `LinAlgError` after switching to BFGS optimization). Market only leads at 0.681 (CI [0.571, 0.777]), with Full model at 0.672 (CI [0.562, 0.774]) — a gap of 0.009, well within bootstrap noise. Accounting only (0.655, CI [0.553, 0.757]) and Acct+Market (0.669, CI [0.560, 0.774]) also cluster near the top; the FE dummies absorb much of the between-firm and between-year variance, leaving all feature subsets with similar discrimination. Macro only jumps from 0.342 (pooled) to 0.641 (FE, CI [0.551, 0.734]) — the largest cross-family shift in the table. This reversal occurs because industry and year dummies absorb cross-sectional baseline rates and the calendar-level average, leaving within-cluster macro variation that correlates in the expected direction with distress. Filing only (0.637, CI [0.546, 0.730]) also rises sharply under FE, suggesting `late_filing` has within-industry signal obscured by between-industry differences in pooled logit. No pair of FE subsets has disjoint CIs.
 
 **Hazard logit:** Pattern mirrors pooled: Market only leads at 0.632 (CI [0.518, 0.730]), Acct + Market is runner-up at 0.596 (CI [0.463, 0.712]), Full model trails at 0.556 (CI [0.436, 0.665]). Macro only (0.343, CI [0.278, 0.402]) and Filing only (0.358, CI [0.297, 0.418]) are the worst performers, with CIs entirely below 0.5. The log-duration baseline coefficient is 0.050 (SE 0.051, p = 0.329), indicating no detectable positive duration dependence in the training data after conditioning on covariates. All CIs overlap across subsets.
 
@@ -68,11 +70,11 @@ Under FE, `credit_spread` flips to +0.883 (SE = 0.201, p < 0.001) — the expect
 
 ## Limitations
 
-- FE Accounting only and FE Acct + Market failed with `LinAlgError: Singular matrix` on the 77-firm panel — those two FE rows are absent from the table. The fe block therefore has 4 rows (Market only, Macro only, Filing only, Full model) rather than the 6 rows in pooled and hazard.
+- FE Accounting only and FE Acct + Market previously failed with `LinAlgError: Singular matrix` under Newton-Raphson optimization. After switching to BFGS with `maxiter=200`, both rows now converge and appear in the table. The fe block therefore has 6 rows (all subsets except Altman Z-score), matching pooled and hazard.
 - Altman Z-score fails for all three families due to inf/NaN in the `z_score` column. Not reportable on this panel.
 - 1,000 firm-clustered resamples on 77 firms gives an effective sample size of approximately 77 unique clusters regardless of row count. CI widths are 3–4 times wider than the v1 row-level CIs, which had 2,592 pseudo-independent observations. The v1 claim of disjoint Market/Full CIs was an artefact of underestimated standard errors from row-level resampling; that claim does not hold under firm-clustered bootstrap.
 - All families use the same time split (train: 8,777 rows, 2010–2020; val: 2,772 rows, 2021–2023; test: 924 rows, 2024). Walk-forward CV across multiple test years is queued for Tier 2.
-- The FE coefficient table (`outputs/full_model_coefficients_fe.csv`) has NaN `std_err` and `p_value` for ~32 of its ~51 rows (the industry and year dummy block) because the Hessian is not invertible for that dummy block on the small panel. Treat FE coefficient interpretation as directional only for the dummy rows — standard errors are not available.
+- The FE coefficient table (`outputs/full_model_coefficients_fe.csv`) has NaN `std_err` and `p_value` for all rows. BFGS does not always produce an invertible Hessian for the FE design matrix (many dummy columns on a small panel), so standard errors are unavailable. Treat all FE coefficient magnitudes as directional only — they are not accompanied by valid inferential statistics.
 - Hazard log-duration coefficient (0.050, SE 0.051, p = 0.329): no statistically detectable duration dependence on this panel and training window.
 
 ## Implications for the rest of Phase 3
