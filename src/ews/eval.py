@@ -150,11 +150,11 @@ def ablation_analysis(train: pd.DataFrame, test: pd.DataFrame) -> pd.DataFrame:
     print("=" * 70)
 
     subsets = {
-        "Accounting only":   ["leverage", "liquidity_buffer", "wc_ratio", "profitability"],
+        "Accounting only":   ["leverage", "liquidity_buffer", "wc_ratio", "wc_ratio_missing", "profitability"],
         "Market only":       ["ret_1m", "ret_3m", "ret_6m", "vol_3m", "vol_6m", "drawdown_12m"],
         "Macro only":        ["vix", "term_spread", "credit_spread"],
         "Filing only":       ["late_filing"],
-        "Acct + Market":     ["leverage", "liquidity_buffer", "wc_ratio", "profitability",
+        "Acct + Market":     ["leverage", "liquidity_buffer", "wc_ratio", "wc_ratio_missing", "profitability",
                               "ret_1m", "ret_3m", "ret_6m", "vol_3m", "vol_6m", "drawdown_12m"],
         "Full model":        FEATURE_COLS,
         "Altman Z-score":    ["z_score"],

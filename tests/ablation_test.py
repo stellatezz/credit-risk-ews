@@ -81,6 +81,35 @@ if {"AUROC_lo", "AUROC_hi"}.issubset(rdf.columns):
     nontrivial = ((rdf["AUROC_hi"] - rdf["AUROC_lo"]) > 0).all()
     check("CI widths are nonzero", bool(nontrivial))
 
+print("\n[4] REITs back in panel; wc_ratio_missing column present")
+REIT_TICKERS = ["SPG", "O", "PLD", "VTR"]
+panel_tickers = set(panel["ticker"].unique())
+reits_in_panel = [t for t in REIT_TICKERS if t in panel_tickers]
+check(
+    "at least 3 of 4 named REITs survive panel dropna",
+    len(reits_in_panel) >= 3,
+    f"REITs in panel: {reits_in_panel}",
+)
+check(
+    "wc_ratio_missing column present in panel",
+    "wc_ratio_missing" in panel.columns,
+    f"columns include wc_ratio_missing: {'wc_ratio_missing' in panel.columns}",
+)
+if "wc_ratio_missing" in panel.columns:
+    check(
+        "wc_ratio_missing is binary (only 0/1 values)",
+        set(panel["wc_ratio_missing"].unique()).issubset({0, 1}),
+        f"unique values: {sorted(panel['wc_ratio_missing'].unique())}",
+    )
+    # For REIT rows, missingness should be 1 (they're the reason we added this feature)
+    reit_rows = panel[panel["ticker"].isin(REIT_TICKERS)]
+    if len(reit_rows) > 0:
+        check(
+            "REIT rows have wc_ratio_missing == 1",
+            (reit_rows["wc_ratio_missing"] == 1).all(),
+            f"REIT wc_ratio_missing values: {reit_rows['wc_ratio_missing'].unique()}",
+        )
+
 print("\n" + "=" * 60)
 if FAILURES:
     print(f"ABLATION TEST FAILED — {len(FAILURES)} assertion(s) failed:")

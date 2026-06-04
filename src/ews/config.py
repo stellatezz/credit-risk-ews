@@ -166,7 +166,7 @@ MIN_HISTORY_DAYS = 100       # min per-ticker history; below this -> LoaderError
 # Column order matters: models.py adds these as a constant list; changing the
 # order here would change the coefficient output order and break stdout diff.
 FEATURE_COLS = [
-    "leverage", "liquidity_buffer", "wc_ratio", "profitability",
+    "leverage", "liquidity_buffer", "wc_ratio", "wc_ratio_missing", "profitability",
     "ret_1m", "ret_3m", "ret_6m",
     "vol_3m", "vol_6m", "drawdown_12m",
     "late_filing",

@@ -85,7 +85,14 @@ def assemble_panel(
     panel = panel[panel["year"] >= PANEL_START_YEAR].copy()
     panel = panel.sort_values(["ticker", "date"]).reset_index(drop=True)
 
-    # 6. Drop rows with any missing feature / label.
+    # 6. Impute structurally-undefined wc_ratio (REITs file unclassified balance
+    #    sheets and don't report current assets/liabilities). We fill with 0.0
+    #    as a neutral value and emit a binary missingness indicator so the
+    #    model can learn "no working-capital signal" as its own feature.
+    panel["wc_ratio_missing"] = panel["wc_ratio"].isna().astype(int)
+    panel["wc_ratio"] = panel["wc_ratio"].fillna(0.0)
+
+    # 7. Drop rows with any remaining missing feature / label.
     before = len(panel)
     panel = panel.dropna(subset=FEATURE_COLS + [LABEL_COL])
     print(f"  Panel: {len(panel)} firm-months ({before - len(panel)} dropped for NaN)")
