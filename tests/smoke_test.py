@@ -61,20 +61,23 @@ check(
 )
 
 # -----------------------------------------------------------------------------
-# Assertion 2: loader stubs raise NotImplementedError
+# Assertion 2: loader status — SEC fundamentals live, FRED macros still stubbed
 # -----------------------------------------------------------------------------
-print("\n[2] Loader stubs raise NotImplementedError")
+print("\n[2] Loader status: SEC fundamentals live, FRED macros still stubbed")
 dates = pd.DatetimeIndex(pd.date_range("2020-01-31", "2020-12-31", freq="ME"))
 
+df_sec = load_fundamentals(["XOM"], dates, source="sec")
+check("load_fundamentals(source='sec') returns a DataFrame", isinstance(df_sec, pd.DataFrame))
 try:
-    load_fundamentals(["XOM"], dates, source="sec")
-    check("load_fundamentals(source='sec') raises", False, "did not raise")
-except NotImplementedError as e:
-    check(
-        "load_fundamentals(source='sec') raises NotImplementedError",
-        "Allen" in str(e) or "SEC" in str(e),
-        f"message mentions Allen/SEC: {str(e)[:80]}",
-    )
+    check_loader("fundamentals", df_sec)
+    check("SEC fundamentals schema-compliant", True)
+except AssertionError as e:
+    check("SEC fundamentals schema-compliant", False, str(e)[:120])
+check(
+    "SEC fundamentals has rows for XOM",
+    len(df_sec) >= 1,
+    f"rows={len(df_sec)}",
+)
 
 try:
     load_macros(dates, source="fred")
