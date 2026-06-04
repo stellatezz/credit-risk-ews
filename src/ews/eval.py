@@ -189,7 +189,6 @@ MODEL_FAMILIES: dict[str, callable] = {
 def persist_full_model_coefficients(
     train: pd.DataFrame,
     family_name: str,
-    fit_fn: callable | None = None,
 ) -> str:
     """Fit the Full model with the given family and write its coefficient table
     to `outputs/full_model_coefficients_<family>.csv`.
@@ -197,15 +196,12 @@ def persist_full_model_coefficients(
     Persists: feature, coef, std_err, p_value.
     Returns the absolute output path written.
     """
-    fit_fn = fit_fn or MODEL_FAMILIES[family_name]
-
     # We need the fitted statsmodels Results object, not just predictions,
     # to read coefficients. Inline the fit here so we can keep the wrappers
     # in MODEL_FAMILIES focused on predictions.
     cols = FEATURE_COLS
     if family_name == "pooled":
         m = sm.Logit(train[LABEL_COL], sm.add_constant(train[cols])).fit(disp=0)
-        names = ["const"] + cols
     elif family_name == "fe":
         train_fe = pd.concat([
             train[cols].reset_index(drop=True),
@@ -213,19 +209,17 @@ def persist_full_model_coefficients(
             pd.get_dummies(train["year"], prefix="yr", drop_first=False).astype(float).reset_index(drop=True),
         ], axis=1)
         m = sm.Logit(train[LABEL_COL].reset_index(drop=True), sm.add_constant(train_fe)).fit(disp=0)
-        names = ["const"] + list(train_fe.columns)
     elif family_name == "hazard":
         tr = train.copy().sort_values(["ticker", "date"])
         tr["months_obs"] = tr.groupby("ticker").cumcount() + 1
         tr["log_duration"] = np.log(tr["months_obs"])
         X = sm.add_constant(tr[cols + ["log_duration"]])
         m = sm.Logit(tr[LABEL_COL], X).fit(disp=0)
-        names = ["const"] + cols + ["log_duration"]
     else:
         raise ValueError(f"unknown family: {family_name}")
 
     coef_df = pd.DataFrame({
-        "feature": names,
+        "feature": m.params.index,
         "coef": m.params.values,
         "std_err": m.bse.values,
         "p_value": m.pvalues.values,
