@@ -68,27 +68,50 @@ def evaluate_model(
 def _bootstrap_auroc_ci(
     y_true: np.ndarray,
     y_pred: np.ndarray,
-    n_boot: int = 200,
+    firm_ids: np.ndarray | None = None,
+    n_boot: int = 1000,
     alpha: float = 0.05,
     seed: int = 42,
 ) -> tuple[float, float]:
     """Percentile bootstrap CI for AUROC.
 
-    Resamples rows with replacement `n_boot` times, computes AUROC per resample,
-    returns the (alpha/2, 1-alpha/2) percentiles. Resamples that draw only one
-    class are skipped (AUROC undefined). Returns (nan, nan) if no resample is
-    usable.
+    If `firm_ids` is provided, performs *firm-clustered* bootstrap: each
+    resample draws firm IDs with replacement and includes all rows for each
+    drawn firm. This correctly accounts for within-firm autocorrelation that
+    row-level bootstrap ignores (a major issue in credit-risk panels where
+    consecutive firm-months are highly correlated).
+
+    If `firm_ids` is None, falls back to row-level bootstrap (resample row
+    indices with replacement).
+
+    Resamples that yield single-class y_true are skipped (AUROC undefined).
+    Returns (nan, nan) if no resample is usable.
     """
     rng = np.random.default_rng(seed)
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
     n = len(y_true)
-    aurocs: list[float] = []
-    for _ in range(n_boot):
-        idx = rng.integers(0, n, n)
-        if len(np.unique(y_true[idx])) < 2:
-            continue
-        aurocs.append(roc_auc_score(y_true[idx], y_pred[idx]))
+
+    if firm_ids is not None:
+        firm_ids = np.asarray(firm_ids)
+        unique_firms = np.unique(firm_ids)
+        # Pre-index rows-per-firm once for speed
+        firm_to_rows = {f: np.where(firm_ids == f)[0] for f in unique_firms}
+        aurocs: list[float] = []
+        for _ in range(n_boot):
+            sampled_firms = rng.choice(unique_firms, size=len(unique_firms), replace=True)
+            idx = np.concatenate([firm_to_rows[f] for f in sampled_firms])
+            if len(np.unique(y_true[idx])) < 2:
+                continue
+            aurocs.append(roc_auc_score(y_true[idx], y_pred[idx]))
+    else:
+        aurocs = []
+        for _ in range(n_boot):
+            idx = rng.integers(0, n, size=n)
+            if len(np.unique(y_true[idx])) < 2:
+                continue
+            aurocs.append(roc_auc_score(y_true[idx], y_pred[idx]))
+
     if not aurocs:
         return float("nan"), float("nan")
     lo, hi = np.percentile(aurocs, [100 * alpha / 2, 100 * (1 - alpha / 2)])
@@ -167,8 +190,9 @@ def ablation_analysis(train: pd.DataFrame, test: pd.DataFrame) -> pd.DataFrame:
             p = m.predict(sm.add_constant(test[cols]))
             y_true = test[LABEL_COL].values
             y_pred = p.values if hasattr(p, "values") else np.asarray(p)
+            firm_ids = test["ticker"].values
             auroc = roc_auc_score(y_true, y_pred)
-            lo, hi = _bootstrap_auroc_ci(y_true, y_pred)
+            lo, hi = _bootstrap_auroc_ci(y_true, y_pred, firm_ids=firm_ids)
             results.append({
                 "Feature set": name,
                 "N": len(cols),

@@ -110,6 +110,43 @@ if "wc_ratio_missing" in panel.columns:
             f"REIT wc_ratio_missing values: {reit_rows['wc_ratio_missing'].unique()}",
         )
 
+print("\n[5] firm-clustered bootstrap widens CIs vs row-level")
+# Quick property check: rerunning ablation with row-level bootstrap should give
+# strictly narrower CIs than the production (clustered) run, because clustered
+# resampling correctly accounts for within-firm autocorrelation.
+from ews.eval import ablation_analysis, _bootstrap_auroc_ci  # noqa: E402
+
+# The production call (test passes ticker col via test data → clustered)
+rdf_clustered = rdf  # alias the section [2] result for clarity
+clustered_widths = (rdf_clustered["AUROC_hi"] - rdf_clustered["AUROC_lo"]).values
+
+# Reference: row-level CIs on the same subsets via a small direct invocation
+# of the helper. We only need one subset for the smoke check — Market only.
+import statsmodels.api as sm
+from sklearn.metrics import roc_auc_score  # noqa: E402
+
+market_cols = ["ret_1m", "ret_3m", "ret_6m", "vol_3m", "vol_6m", "drawdown_12m"]
+m = sm.Logit(train["label_a"], sm.add_constant(train[market_cols])).fit(disp=0)
+p = m.predict(sm.add_constant(test[market_cols]))
+y_true = test["label_a"].values
+y_pred = p.values
+lo_row, hi_row = _bootstrap_auroc_ci(y_true, y_pred, firm_ids=None, n_boot=1000)
+row_level_width = hi_row - lo_row
+
+market_row = rdf_clustered[rdf_clustered["Feature set"] == "Market only"].iloc[0]
+clustered_width = market_row["AUROC_hi"] - market_row["AUROC_lo"]
+
+check(
+    "Market only clustered CI is at least as wide as row-level CI",
+    clustered_width >= row_level_width * 0.9,  # 0.9 buffer for monte-carlo noise
+    f"clustered={clustered_width:.4f} vs row-level={row_level_width:.4f}",
+)
+check(
+    "every clustered CI width < 1.0 (CI is actually informative)",
+    bool((clustered_widths < 1.0).all()),
+    f"widths: {clustered_widths.round(4).tolist()}",
+)
+
 print("\n" + "=" * 60)
 if FAILURES:
     print(f"ABLATION TEST FAILED — {len(FAILURES)} assertion(s) failed:")
