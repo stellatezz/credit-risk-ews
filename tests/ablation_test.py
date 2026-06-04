@@ -146,6 +146,30 @@ check(
     f"widths: {clustered_widths.round(4).tolist()}",
 )
 
+print("\n[6] ablation runs over multiple model families")
+check(
+    "model_family column present",
+    "model_family" in rdf.columns,
+    f"columns: {list(rdf.columns)}",
+)
+if "model_family" in rdf.columns:
+    families = set(rdf["model_family"].unique())
+    check(
+        "at least pooled + fe families ran successfully",
+        {"pooled", "fe"}.issubset(families),
+        f"families: {sorted(families)}",
+    )
+    # Each successful family should produce all 6 subsets (or fail-and-omit
+    # individually; the row count per family must be > 1 for the data to mean
+    # anything).
+    for fam in families:
+        n_subsets = (rdf["model_family"] == fam).sum()
+        check(
+            f"{fam} family produced multiple subset rows (got {n_subsets})",
+            n_subsets >= 4,
+            f"{fam}: {n_subsets} rows",
+        )
+
 print("\n" + "=" * 60)
 if FAILURES:
     print(f"ABLATION TEST FAILED — {len(FAILURES)} assertion(s) failed:")

@@ -119,6 +119,70 @@ def _bootstrap_auroc_ci(
 
 
 # =============================================================================
+# Per-family fit wrappers (used by ablation_analysis to loop over model types)
+# =============================================================================
+
+def _fit_pooled(train: pd.DataFrame, test: pd.DataFrame, cols: list[str]) -> pd.Series:
+    """Plain pooled logit: y ~ const + cols. Returns predicted probabilities on test."""
+    m = sm.Logit(train[LABEL_COL], sm.add_constant(train[cols])).fit(disp=0)
+    return m.predict(sm.add_constant(test[cols]))
+
+
+def _fit_fe(train: pd.DataFrame, test: pd.DataFrame, cols: list[str]) -> pd.Series:
+    """Pooled logit with industry + year dummies (lightweight FE for ablation).
+
+    Uses drop_first=False and lets statsmodels absorb perfect collinearity rather
+    than risk a singular matrix when one category dominates a small feature subset.
+    """
+    train_fe = pd.concat([
+        train[cols].reset_index(drop=True),
+        pd.get_dummies(train["industry"], prefix="ind", drop_first=False).astype(float).reset_index(drop=True),
+        pd.get_dummies(train["year"], prefix="yr", drop_first=False).astype(float).reset_index(drop=True),
+    ], axis=1)
+    test_fe = pd.concat([
+        test[cols].reset_index(drop=True),
+        pd.get_dummies(test["industry"], prefix="ind", drop_first=False).astype(float).reset_index(drop=True),
+        pd.get_dummies(test["year"], prefix="yr", drop_first=False).astype(float).reset_index(drop=True),
+    ], axis=1)
+    # Align test columns to train (dummies may differ if a year/industry appears
+    # in only one split)
+    test_fe = test_fe.reindex(columns=train_fe.columns, fill_value=0.0)
+    m = sm.Logit(train[LABEL_COL].reset_index(drop=True), sm.add_constant(train_fe)).fit(disp=0)
+    return m.predict(sm.add_constant(test_fe))
+
+
+def _fit_hazard(train: pd.DataFrame, test: pd.DataFrame, cols: list[str]) -> pd.Series:
+    """Discrete-time hazard logit: pooled logit + log-duration baseline.
+
+    Duration = months since first observation per firm. Approximates the
+    Shumway (2001) form without the full hazard panel restructure.
+    """
+    def with_log_duration(df: pd.DataFrame) -> pd.DataFrame:
+        df = df.copy().sort_values(["ticker", "date"])
+        df["months_obs"] = df.groupby("ticker").cumcount() + 1
+        df["log_duration"] = np.log(df["months_obs"])
+        return df
+
+    train_h = with_log_duration(train)
+    test_h = with_log_duration(test)
+    X_train = sm.add_constant(train_h[cols + ["log_duration"]])
+    X_test = sm.add_constant(test_h[cols + ["log_duration"]])
+    m = sm.Logit(train_h[LABEL_COL], X_train).fit(disp=0)
+    # Predictions must align back to the original test row order so the bootstrap
+    # firm_ids index matches.
+    preds = m.predict(X_test)
+    preds.index = test_h.index
+    return preds.reindex(test.index)
+
+
+MODEL_FAMILIES: dict[str, callable] = {
+    "pooled": _fit_pooled,
+    "fe":     _fit_fe,
+    "hazard": _fit_hazard,
+}
+
+
+# =============================================================================
 # Lead time
 # =============================================================================
 
@@ -184,26 +248,30 @@ def ablation_analysis(train: pd.DataFrame, test: pd.DataFrame) -> pd.DataFrame:
     }
 
     results = []
-    for name, cols in subsets.items():
-        try:
-            m = sm.Logit(train[LABEL_COL], sm.add_constant(train[cols])).fit(disp=0)
-            p = m.predict(sm.add_constant(test[cols]))
-            y_true = test[LABEL_COL].values
-            y_pred = p.values if hasattr(p, "values") else np.asarray(p)
-            firm_ids = test["ticker"].values
-            auroc = roc_auc_score(y_true, y_pred)
-            lo, hi = _bootstrap_auroc_ci(y_true, y_pred, firm_ids=firm_ids)
-            results.append({
-                "Feature set": name,
-                "N": len(cols),
-                "AUROC": auroc,
-                "AUROC_lo": lo,
-                "AUROC_hi": hi,
-                "AUPRC": average_precision_score(y_true, y_pred),
-                "Brier": brier_score_loss(y_true, y_pred),
-            })
-        except Exception as e:
-            print(f"  {name}: failed ({e})")
+    firm_ids = test["ticker"].values
+    y_true = test[LABEL_COL].values
+
+    for family_name, fit_fn in MODEL_FAMILIES.items():
+        print(f"\n-- {family_name} --")
+        for subset_name, cols in subsets.items():
+            try:
+                p = fit_fn(train, test, cols)
+                y_pred = p.values if hasattr(p, "values") else np.asarray(p)
+                auroc = roc_auc_score(y_true, y_pred)
+                lo, hi = _bootstrap_auroc_ci(y_true, y_pred, firm_ids=firm_ids)
+                results.append({
+                    "model_family": family_name,
+                    "Feature set": subset_name,
+                    "N": len(cols),
+                    "AUROC": auroc,
+                    "AUROC_lo": lo,
+                    "AUROC_hi": hi,
+                    "AUPRC": average_precision_score(y_true, y_pred),
+                    "Brier": brier_score_loss(y_true, y_pred),
+                })
+            except Exception as e:
+                print(f"  {subset_name}: failed ({type(e).__name__}: {str(e)[:80]})")
+
     rdf = pd.DataFrame(results)
     print("\n" + rdf.round(4).to_string(index=False))
 
