@@ -105,7 +105,7 @@ def _bootstrap_auroc_ci(
                 continue
             aurocs.append(roc_auc_score(y_true[idx], y_pred[idx]))
     else:
-        aurocs = []
+        aurocs: list[float] = []
         for _ in range(n_boot):
             idx = rng.integers(0, n, size=n)
             if len(np.unique(y_true[idx])) < 2:

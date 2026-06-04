@@ -114,7 +114,7 @@ print("\n[5] firm-clustered bootstrap widens CIs vs row-level")
 # Quick property check: rerunning ablation with row-level bootstrap should give
 # strictly narrower CIs than the production (clustered) run, because clustered
 # resampling correctly accounts for within-firm autocorrelation.
-from ews.eval import ablation_analysis, _bootstrap_auroc_ci  # noqa: E402
+from ews.eval import _bootstrap_auroc_ci  # noqa: E402
 
 # The production call (test passes ticker col via test data → clustered)
 rdf_clustered = rdf  # alias the section [2] result for clarity
@@ -123,7 +123,6 @@ clustered_widths = (rdf_clustered["AUROC_hi"] - rdf_clustered["AUROC_lo"]).value
 # Reference: row-level CIs on the same subsets via a small direct invocation
 # of the helper. We only need one subset for the smoke check — Market only.
 import statsmodels.api as sm
-from sklearn.metrics import roc_auc_score  # noqa: E402
 
 market_cols = ["ret_1m", "ret_3m", "ret_6m", "vol_3m", "vol_6m", "drawdown_12m"]
 m = sm.Logit(train["label_a"], sm.add_constant(train[market_cols])).fit(disp=0)
