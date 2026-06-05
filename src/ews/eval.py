@@ -13,6 +13,8 @@ the 3-tier fallback policy.
 
 from __future__ import annotations
 
+import os
+
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
@@ -22,7 +24,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from .config import FEATURE_COLS, FIRMS, LABEL_COL, LEAD_TIME_THRESHOLD, TOP_K_FRACTION
+from .config import FEATURE_COLS, FIRMS, LABEL_COL, LEAD_TIME_THRESHOLD, PATHS, TOP_K_FRACTION
 
 
 # =============================================================================
@@ -57,6 +59,181 @@ def evaluate_model(
     print(f"    Top-10% Capture: {results['top10_capture']:.1%} of events")
     print(f"    Top-10% Lift:    {results['top10_lift']:.2f}x")
     return results
+
+
+# =============================================================================
+# Bootstrap CI helper (used by ablation_analysis)
+# =============================================================================
+
+def _bootstrap_auroc_ci(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    firm_ids: np.ndarray | None = None,
+    n_boot: int = 1000,
+    alpha: float = 0.05,
+    seed: int = 42,
+) -> tuple[float, float]:
+    """Percentile bootstrap CI for AUROC.
+
+    If `firm_ids` is provided, performs *firm-clustered* bootstrap: each
+    resample draws firm IDs with replacement and includes all rows for each
+    drawn firm. This correctly accounts for within-firm autocorrelation that
+    row-level bootstrap ignores (a major issue in credit-risk panels where
+    consecutive firm-months are highly correlated).
+
+    If `firm_ids` is None, falls back to row-level bootstrap (resample row
+    indices with replacement).
+
+    Resamples that yield single-class y_true are skipped (AUROC undefined).
+    Returns (nan, nan) if no resample is usable.
+    """
+    rng = np.random.default_rng(seed)
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+    n = len(y_true)
+
+    if firm_ids is not None:
+        firm_ids = np.asarray(firm_ids)
+        unique_firms = np.unique(firm_ids)
+        # Pre-index rows-per-firm once for speed
+        firm_to_rows = {f: np.where(firm_ids == f)[0] for f in unique_firms}
+        aurocs: list[float] = []
+        for _ in range(n_boot):
+            sampled_firms = rng.choice(unique_firms, size=len(unique_firms), replace=True)
+            idx = np.concatenate([firm_to_rows[f] for f in sampled_firms])
+            if len(np.unique(y_true[idx])) < 2:
+                continue
+            aurocs.append(roc_auc_score(y_true[idx], y_pred[idx]))
+    else:
+        aurocs: list[float] = []
+        for _ in range(n_boot):
+            idx = rng.integers(0, n, size=n)
+            if len(np.unique(y_true[idx])) < 2:
+                continue
+            aurocs.append(roc_auc_score(y_true[idx], y_pred[idx]))
+
+    if not aurocs:
+        return float("nan"), float("nan")
+    lo, hi = np.percentile(aurocs, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    return float(lo), float(hi)
+
+
+# =============================================================================
+# Per-family fit wrappers (used by ablation_analysis to loop over model types)
+# =============================================================================
+
+def _fit_pooled(train: pd.DataFrame, test: pd.DataFrame, cols: list[str]) -> pd.Series:
+    """Plain pooled logit: y ~ const + cols. Returns predicted probabilities on test."""
+    m = sm.Logit(train[LABEL_COL], sm.add_constant(train[cols])).fit(disp=0)
+    return m.predict(sm.add_constant(test[cols]))
+
+
+def _fit_fe(train: pd.DataFrame, test: pd.DataFrame, cols: list[str]) -> pd.Series:
+    """Pooled logit with industry + year dummies (lightweight FE for ablation).
+
+    Uses drop_first=False and lets statsmodels absorb perfect collinearity rather
+    than risk a singular matrix when one category dominates a small feature subset.
+    """
+    train_fe = pd.concat([
+        train[cols].reset_index(drop=True),
+        pd.get_dummies(train["industry"], prefix="ind", drop_first=False).astype(float).reset_index(drop=True),
+        pd.get_dummies(train["year"], prefix="yr", drop_first=False).astype(float).reset_index(drop=True),
+    ], axis=1)
+    test_fe = pd.concat([
+        test[cols].reset_index(drop=True),
+        pd.get_dummies(test["industry"], prefix="ind", drop_first=False).astype(float).reset_index(drop=True),
+        pd.get_dummies(test["year"], prefix="yr", drop_first=False).astype(float).reset_index(drop=True),
+    ], axis=1)
+    # Align test columns to train (dummies may differ if a year/industry appears
+    # in only one split)
+    test_fe = test_fe.reindex(columns=train_fe.columns, fill_value=0.0)
+    m = sm.Logit(train[LABEL_COL].reset_index(drop=True), sm.add_constant(train_fe)).fit(
+        disp=0, method="bfgs", maxiter=200
+    )
+    return m.predict(sm.add_constant(test_fe))
+
+
+def _fit_hazard(train: pd.DataFrame, test: pd.DataFrame, cols: list[str]) -> pd.Series:
+    """Discrete-time hazard logit: pooled logit + log-duration baseline.
+
+    Duration = months since first observation per firm. Approximates the
+    Shumway (2001) form without the full hazard panel restructure.
+    """
+    def with_log_duration(df: pd.DataFrame) -> pd.DataFrame:
+        df = df.copy().sort_values(["ticker", "date"])
+        df["months_obs"] = df.groupby("ticker").cumcount() + 1
+        df["log_duration"] = np.log(df["months_obs"])
+        return df
+
+    train_h = with_log_duration(train)
+    test_h = with_log_duration(test)
+    X_train = sm.add_constant(train_h[cols + ["log_duration"]])
+    X_test = sm.add_constant(test_h[cols + ["log_duration"]])
+    m = sm.Logit(train_h[LABEL_COL], X_train).fit(disp=0)
+    # Predictions must align back to the original test row order so the bootstrap
+    # firm_ids index matches.
+    preds = m.predict(X_test)
+    preds.index = test_h.index
+    return preds.reindex(test.index)
+
+
+MODEL_FAMILIES: dict[str, callable] = {
+    "pooled": _fit_pooled,
+    "fe":     _fit_fe,
+    "hazard": _fit_hazard,
+}
+
+
+# =============================================================================
+# Coefficient persistence (Full model per family)
+# =============================================================================
+
+def persist_full_model_coefficients(
+    train: pd.DataFrame,
+    family_name: str,
+) -> str:
+    """Fit the Full model with the given family and write its coefficient table
+    to `outputs/full_model_coefficients_<family>.csv`.
+
+    Persists: feature, coef, std_err, p_value.
+    Returns the absolute output path written.
+    """
+    # We need the fitted statsmodels Results object, not just predictions,
+    # to read coefficients. Inline the fit here so we can keep the wrappers
+    # in MODEL_FAMILIES focused on predictions.
+    cols = FEATURE_COLS
+    if family_name == "pooled":
+        m = sm.Logit(train[LABEL_COL], sm.add_constant(train[cols])).fit(disp=0)
+    elif family_name == "fe":
+        train_fe = pd.concat([
+            train[cols].reset_index(drop=True),
+            pd.get_dummies(train["industry"], prefix="ind", drop_first=False).astype(float).reset_index(drop=True),
+            pd.get_dummies(train["year"], prefix="yr", drop_first=False).astype(float).reset_index(drop=True),
+        ], axis=1)
+        m = sm.Logit(train[LABEL_COL].reset_index(drop=True), sm.add_constant(train_fe)).fit(
+            disp=0, method="bfgs", maxiter=200
+        )
+    elif family_name == "hazard":
+        tr = train.copy().sort_values(["ticker", "date"])
+        tr["months_obs"] = tr.groupby("ticker").cumcount() + 1
+        tr["log_duration"] = np.log(tr["months_obs"])
+        X = sm.add_constant(tr[cols + ["log_duration"]])
+        m = sm.Logit(tr[LABEL_COL], X).fit(disp=0)
+    else:
+        raise ValueError(f"unknown family: {family_name}")
+
+    coef_df = pd.DataFrame({
+        "feature": m.params.index,
+        "coef": m.params.values,
+        "std_err": m.bse.values,
+        "p_value": m.pvalues.values,
+    })
+
+    os.makedirs(PATHS.OUTPUTS, exist_ok=True)
+    out_path = os.path.join(PATHS.OUTPUTS, f"full_model_coefficients_{family_name}.csv")
+    coef_df.to_csv(out_path, index=False)
+    print(f"  Saved {family_name} full-model coefficients to: {out_path}")
+    return out_path
 
 
 # =============================================================================
@@ -114,31 +291,49 @@ def ablation_analysis(train: pd.DataFrame, test: pd.DataFrame) -> pd.DataFrame:
     print("=" * 70)
 
     subsets = {
-        "Accounting only":   ["leverage", "liquidity_buffer", "wc_ratio", "profitability"],
+        "Accounting only":   ["leverage", "liquidity_buffer", "wc_ratio", "wc_ratio_missing", "profitability"],
         "Market only":       ["ret_1m", "ret_3m", "ret_6m", "vol_3m", "vol_6m", "drawdown_12m"],
         "Macro only":        ["vix", "term_spread", "credit_spread"],
-        "Acct + Market":     ["leverage", "liquidity_buffer", "wc_ratio", "profitability",
+        "Filing only":       ["late_filing"],
+        "Acct + Market":     ["leverage", "liquidity_buffer", "wc_ratio", "wc_ratio_missing", "profitability",
                               "ret_1m", "ret_3m", "ret_6m", "vol_3m", "vol_6m", "drawdown_12m"],
         "Full model":        FEATURE_COLS,
         "Altman Z-score":    ["z_score"],
     }
 
     results = []
-    for name, cols in subsets.items():
-        try:
-            m = sm.Logit(train[LABEL_COL], sm.add_constant(train[cols])).fit(disp=0)
-            p = m.predict(sm.add_constant(test[cols]))
-            results.append({
-                "Feature set": name,
-                "N": len(cols),
-                "AUROC": roc_auc_score(test[LABEL_COL], p),
-                "AUPRC": average_precision_score(test[LABEL_COL], p),
-                "Brier": brier_score_loss(test[LABEL_COL], p),
-            })
-        except Exception as e:
-            print(f"  {name}: failed ({e})")
+    firm_ids = test["ticker"].values
+    y_true = test[LABEL_COL].values
+
+    for family_name, fit_fn in MODEL_FAMILIES.items():
+        print(f"\n-- {family_name} --")
+        for subset_name, cols in subsets.items():
+            try:
+                p = fit_fn(train, test, cols)
+                y_pred = p.values if hasattr(p, "values") else np.asarray(p)
+                auroc = roc_auc_score(y_true, y_pred)
+                lo, hi = _bootstrap_auroc_ci(y_true, y_pred, firm_ids=firm_ids)
+                results.append({
+                    "model_family": family_name,
+                    "Feature set": subset_name,
+                    "N": len(cols),
+                    "AUROC": auroc,
+                    "AUROC_lo": lo,
+                    "AUROC_hi": hi,
+                    "AUPRC": average_precision_score(y_true, y_pred),
+                    "Brier": brier_score_loss(y_true, y_pred),
+                })
+            except Exception as e:
+                print(f"  {subset_name}: failed ({type(e).__name__}: {str(e)[:80]})")
+
     rdf = pd.DataFrame(results)
     print("\n" + rdf.round(4).to_string(index=False))
+
+    os.makedirs(PATHS.OUTPUTS, exist_ok=True)
+    out_path = os.path.join(PATHS.OUTPUTS, "ablation_results.csv")
+    rdf.to_csv(out_path, index=False)
+    print(f"\n  Saved ablation results to: {out_path}")
+
     return rdf
 
 
