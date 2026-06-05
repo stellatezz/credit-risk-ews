@@ -170,6 +170,36 @@ def main() -> None:
     except Exception as e:
         _warn(f"Ablation failed: {e}")
 
+    # -- Per-slice analyses (Phase 3 items #3 + #6 + #7) -----------------
+    from .config import MARKET_FEATURE_COLS  # local import; new constant
+    from .eval import evaluate_by_slice, error_analysis_by_slice  # local
+    os.makedirs(PATHS.OUTPUTS, exist_ok=True)
+
+    for slice_col, stem in (("industry", "sector"), ("archetype", "category")):
+        try:
+            rdf = evaluate_by_slice(
+                train, eval_data,
+                slice_col=slice_col,
+                feature_cols=MARKET_FEATURE_COLS,
+                label_col=LABEL_COL,
+            )
+            rdf.to_csv(os.path.join(PATHS.OUTPUTS, f"{stem}_results.csv"), index=False)
+            print(f"  Saved {stem} AUROC results to: outputs/{stem}_results.csv")
+        except Exception as e:
+            _warn(f"Per-slice AUROC ({slice_col}) failed: {e}")
+
+        try:
+            edf = error_analysis_by_slice(
+                train, eval_data,
+                slice_col=slice_col,
+                feature_cols=MARKET_FEATURE_COLS,
+                label_col=LABEL_COL,
+            )
+            edf.to_csv(os.path.join(PATHS.OUTPUTS, f"{stem}_errors.csv"), index=False)
+            print(f"  Saved {stem} error analysis to: outputs/{stem}_errors.csv")
+        except Exception as e:
+            _warn(f"Per-slice errors ({slice_col}) failed: {e}")
+
     try:
         robustness_rolling_window(panel)
     except Exception as e:

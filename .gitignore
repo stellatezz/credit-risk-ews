@@ -29,3 +29,7 @@ DASHBOARD_README.md
 # Generated outputs
 outputs/ablation_results.csv
 outputs/full_model_coefficients_*.csv
+outputs/sector_results.csv
+outputs/category_results.csv
+outputs/sector_errors.csv
+outputs/category_errors.csv
