@@ -125,6 +125,33 @@ check(
 )
 
 
+print("\n[4] error_analysis_by_slice produces per-slice precision/recall + counts")
+from ews.eval import error_analysis_by_slice  # noqa: E402
+
+err_sector = error_analysis_by_slice(train, val, slice_col="industry",
+                                     feature_cols=MARKET_FEATURE_COLS, label_col=LABEL_COL)
+expected = {"slice", "n_rows", "n_events", "n_flags", "TP", "FP", "FN", "TN",
+            "precision", "recall"}
+check(
+    "error CSV has required columns",
+    expected.issubset(set(err_sector.columns)),
+    f"got {sorted(err_sector.columns)}",
+)
+if expected.issubset(set(err_sector.columns)):
+    # Counts must add up per slice
+    counts_ok = ((err_sector["TP"] + err_sector["FP"] + err_sector["FN"] + err_sector["TN"])
+                 == err_sector["n_rows"]).all()
+    check("TP+FP+FN+TN == n_rows for every slice", bool(counts_ok))
+    # Recall = TP/(TP+FN) whenever events > 0
+    nonzero = err_sector[err_sector["n_events"] > 0]
+    if len(nonzero) > 0:
+        expected_recall = nonzero["TP"] / nonzero["n_events"]
+        check(
+            "recall = TP/(TP+FN) within 1e-6",
+            (abs(nonzero["recall"] - expected_recall) < 1e-6).all(),
+        )
+
+
 print("\n" + "=" * 60)
 if FAILURES:
     print(f"CATEGORY/SECTOR TEST FAILED — {len(FAILURES)} assertion(s) failed:")

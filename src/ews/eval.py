@@ -406,6 +406,63 @@ def evaluate_by_slice(
     return rdf
 
 
+def error_analysis_by_slice(
+    train: pd.DataFrame,
+    val: pd.DataFrame,
+    slice_col: str,
+    feature_cols: list[str],
+    label_col: str,
+    top_k_fraction: float = TOP_K_FRACTION,
+) -> pd.DataFrame:
+    """Per-slice false-positive / false-negative breakdown at top-decile
+    flagging threshold.
+
+    Threshold is chosen as the val-set quantile (1 - top_k_fraction) of
+    predicted probabilities — the same population the analyst sees. Slices
+    inherit that global threshold so per-slice precision/recall is comparable.
+
+    Returns DataFrame:
+      slice, n_rows, n_events, n_flags, TP, FP, FN, TN, precision, recall
+    """
+    print(f"\nPer-slice error analysis on '{slice_col}' (threshold = top {top_k_fraction:.0%}):")
+
+    m = sm.Logit(train[label_col], sm.add_constant(train[feature_cols])).fit(disp=0)
+    val_pred = m.predict(sm.add_constant(val[feature_cols]))
+    threshold = float(val_pred.quantile(1 - top_k_fraction))
+    print(f"  Global flagging threshold (val top-{int(top_k_fraction*100)}%): {threshold:.4f}")
+
+    val_flagged = (val_pred >= threshold).astype(int)
+    y = val[label_col].astype(int)
+
+    rows: list[dict] = []
+    for slice_val, sub in val.groupby(slice_col, dropna=False):
+        sub_idx = sub.index
+        y_sub = y.loc[sub_idx].values
+        f_sub = val_flagged.loc[sub_idx].values
+        TP = int(((f_sub == 1) & (y_sub == 1)).sum())
+        FP = int(((f_sub == 1) & (y_sub == 0)).sum())
+        FN = int(((f_sub == 0) & (y_sub == 1)).sum())
+        TN = int(((f_sub == 0) & (y_sub == 0)).sum())
+        n_rows = len(sub)
+        n_events = int(y_sub.sum())
+        n_flags = int(f_sub.sum())
+        precision = TP / n_flags if n_flags > 0 else float("nan")
+        recall = TP / n_events if n_events > 0 else float("nan")
+        rows.append({
+            "slice": slice_val,
+            "n_rows": n_rows,
+            "n_events": n_events,
+            "n_flags": n_flags,
+            "TP": TP, "FP": FP, "FN": FN, "TN": TN,
+            "precision": precision,
+            "recall": recall,
+        })
+
+    rdf = pd.DataFrame(rows).sort_values("recall", ascending=False, na_position="last")
+    print(rdf.round(3).to_string(index=False))
+    return rdf
+
+
 # =============================================================================
 # Diagnostic: rolling-window robustness
 # =============================================================================
