@@ -173,6 +173,7 @@ def main() -> None:
     # -- Per-slice analyses (Phase 3 items #3 + #6 + #7) -----------------
     from .config import MARKET_FEATURE_COLS  # local import; new constant
     from .eval import evaluate_by_slice, error_analysis_by_slice  # local
+    os.makedirs(PATHS.OUTPUTS, exist_ok=True)
 
     for slice_col, stem in (("industry", "sector"), ("archetype", "category")):
         try:
@@ -182,7 +183,6 @@ def main() -> None:
                 feature_cols=MARKET_FEATURE_COLS,
                 label_col=LABEL_COL,
             )
-            os.makedirs(PATHS.OUTPUTS, exist_ok=True)
             rdf.to_csv(os.path.join(PATHS.OUTPUTS, f"{stem}_results.csv"), index=False)
             print(f"  Saved {stem} AUROC results to: outputs/{stem}_results.csv")
         except Exception as e:
