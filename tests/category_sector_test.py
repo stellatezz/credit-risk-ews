@@ -152,6 +152,13 @@ if expected.issubset(set(err_sector.columns)):
         )
 
 
+print("\n[5] pipeline persists 4 slice CSVs to outputs/")
+for fname in ("sector_results.csv", "category_results.csv",
+              "sector_errors.csv", "category_errors.csv"):
+    path = os.path.join(PATHS.OUTPUTS, fname)
+    check(f"{fname} exists", os.path.isfile(path), path)
+
+
 print("\n" + "=" * 60)
 if FAILURES:
     print(f"CATEGORY/SECTOR TEST FAILED — {len(FAILURES)} assertion(s) failed:")
