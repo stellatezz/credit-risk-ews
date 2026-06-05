@@ -89,6 +89,42 @@ if "archetype" in panel.columns:
     )
 
 
+print("\n[3] evaluate_by_slice produces a per-slice AUROC table")
+from ews.eval import evaluate_by_slice  # noqa: E402
+from ews.config import MARKET_FEATURE_COLS, LABEL_COL  # noqa: E402
+
+# Use the panel loaded in section [2]; split same way the pipeline does.
+train = panel[panel["year"] <= 2020]
+val = panel[(panel["year"] > 2020) & (panel["year"] <= 2023)]
+
+sector_rdf = evaluate_by_slice(train, val, slice_col="industry",
+                               feature_cols=MARKET_FEATURE_COLS, label_col=LABEL_COL)
+check(
+    "industry slice returns a DataFrame with required columns",
+    {"slice", "n_rows", "n_firms", "n_events", "AUROC", "AUROC_lo", "AUROC_hi"}.issubset(set(sector_rdf.columns)),
+    f"got {sorted(sector_rdf.columns)}",
+)
+check(
+    "industry slice has multiple groups",
+    len(sector_rdf) >= 5,
+    f"got {len(sector_rdf)} rows",
+)
+if "n_rows" in sector_rdf.columns:
+    check(
+        "n_rows sums to val length (modulo all-one-class slices that may drop)",
+        sector_rdf["n_rows"].sum() >= 0.9 * len(val),
+        f"sum={sector_rdf['n_rows'].sum()} vs val={len(val)}",
+    )
+
+arch_rdf = evaluate_by_slice(train, val, slice_col="archetype",
+                             feature_cols=MARKET_FEATURE_COLS, label_col=LABEL_COL)
+check(
+    "archetype slice returns >= 3 groups",
+    len(arch_rdf) >= 3,
+    f"got {len(arch_rdf)} rows",
+)
+
+
 print("\n" + "=" * 60)
 if FAILURES:
     print(f"CATEGORY/SECTOR TEST FAILED — {len(FAILURES)} assertion(s) failed:")

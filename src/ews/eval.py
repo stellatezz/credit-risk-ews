@@ -347,6 +347,66 @@ def ablation_analysis(train: pd.DataFrame, test: pd.DataFrame) -> pd.DataFrame:
 
 
 # =============================================================================
+# Per-slice evaluation (Phase 3 items #3 + #6)
+# =============================================================================
+
+def evaluate_by_slice(
+    train: pd.DataFrame,
+    val: pd.DataFrame,
+    slice_col: str,
+    feature_cols: list[str],
+    label_col: str,
+) -> pd.DataFrame:
+    """Fit a pooled logit on `feature_cols` and evaluate per unique value of
+    `slice_col` on the val set. AUROC uses firm-clustered bootstrap CIs.
+
+    Returns DataFrame with columns:
+      slice, n_rows, n_firms, n_events, event_rate, AUROC, AUROC_lo, AUROC_hi
+
+    Slices with fewer than 2 events or fewer than 30 rows are returned with
+    NaN AUROC/CI (uninformative) but kept in the result so the reader sees
+    the sample-size landscape.
+    """
+    print(f"\nPer-slice evaluation on '{slice_col}':")
+
+    # Fit once on train using ALL features in feature_cols.
+    m = sm.Logit(train[label_col], sm.add_constant(train[feature_cols])).fit(disp=0)
+    val_pred = m.predict(sm.add_constant(val[feature_cols]))
+
+    rows: list[dict] = []
+    for slice_val, sub in val.groupby(slice_col, dropna=False):
+        sub_idx = sub.index
+        y_true = sub[label_col].values
+        y_pred = val_pred.loc[sub_idx].values
+        firm_ids = sub["ticker"].values
+        n_rows = len(sub)
+        n_firms = sub["ticker"].nunique()
+        n_events = int(y_true.sum())
+        event_rate = float(y_true.mean()) if n_rows else float("nan")
+        # AUROC undefined if only one class or sample too small
+        if n_events < 2 or n_events == n_rows or n_rows < 30:
+            auroc = float("nan")
+            lo = hi = float("nan")
+        else:
+            auroc = roc_auc_score(y_true, y_pred)
+            lo, hi = _bootstrap_auroc_ci(y_true, y_pred, firm_ids=firm_ids)
+        rows.append({
+            "slice": slice_val,
+            "n_rows": n_rows,
+            "n_firms": n_firms,
+            "n_events": n_events,
+            "event_rate": event_rate,
+            "AUROC": auroc,
+            "AUROC_lo": lo,
+            "AUROC_hi": hi,
+        })
+
+    rdf = pd.DataFrame(rows).sort_values("AUROC", ascending=False, na_position="last")
+    print(rdf.round(3).to_string(index=False))
+    return rdf
+
+
+# =============================================================================
 # Diagnostic: rolling-window robustness
 # =============================================================================
 
