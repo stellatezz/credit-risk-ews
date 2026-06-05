@@ -60,6 +60,35 @@ if os.path.isfile(cat_path):
     )
 
 
+print("\n[2] panel has archetype + sector_raw columns after assembly")
+panel_path = os.path.join(PATHS.PROCESSED, "panel_phase2.csv")
+assert os.path.isfile(panel_path), f"missing panel: {panel_path} — run pipeline first"
+panel = pd.read_csv(panel_path)
+check(
+    "archetype column present in panel_phase2.csv",
+    "archetype" in panel.columns,
+    f"got columns: {list(panel.columns)[-5:]}",  # tail of columns
+)
+check(
+    "sector_raw column present in panel_phase2.csv",
+    "sector_raw" in panel.columns,
+)
+if "archetype" in panel.columns:
+    check(
+        "no panel row has missing archetype",
+        panel["archetype"].notna().all(),
+        f"{panel['archetype'].isna().sum()} rows have NaN archetype",
+    )
+    check(
+        "archetype values match the 7-bucket set",
+        set(panel["archetype"].unique()).issubset({
+            "Distressed", "Cyclical", "Stable", "Growth",
+            "Defensive", "Rate-sensitive", "Commodity-sensitive",
+        }),
+        f"got: {sorted(panel['archetype'].unique())}",
+    )
+
+
 print("\n" + "=" * 60)
 if FAILURES:
     print(f"CATEGORY/SECTOR TEST FAILED — {len(FAILURES)} assertion(s) failed:")

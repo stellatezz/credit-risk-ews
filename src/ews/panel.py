@@ -39,6 +39,8 @@ ASCII merge pipeline:
                                                  PANEL
 """
 
+import os
+
 import pandas as pd
 
 from .config import (
@@ -46,9 +48,20 @@ from .config import (
     FIRMS,
     LABEL_COL,
     PANEL_START_YEAR,
+    PATHS,
     TRAIN_END_YEAR,
     VAL_END_YEAR,
 )
+
+
+def _load_firm_categories() -> pd.DataFrame:
+    """Read data/firm_categories.csv → DataFrame[ticker, sector_raw, archetype, purpose].
+
+    Repo-root-anchored path so callers don't need a working directory.
+    """
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    path = os.path.join(repo_root, "data", "firm_categories.csv")
+    return pd.read_csv(path)
 
 
 def assemble_panel(
@@ -84,6 +97,12 @@ def assemble_panel(
     panel["year"] = panel["date"].dt.year
     panel["month"] = panel["date"].dt.month
     panel["firm_name"] = panel["ticker"].map(lambda t: FIRMS[t]["name"])
+
+    # 4b. Attach archetype + raw sector (parsed from Phase 2 sample-company doc).
+    #     Left-join so a firm missing from firm_categories.csv keeps a NaN
+    #     archetype rather than dropping the row silently.
+    cats = _load_firm_categories()[["ticker", "sector_raw", "archetype"]]
+    panel = panel.merge(cats, on="ticker", how="left")
 
     # 5. Filter to modeling window + stable sort
     panel = panel[panel["year"] >= PANEL_START_YEAR].copy()
