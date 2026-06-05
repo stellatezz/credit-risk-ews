@@ -172,6 +172,17 @@ FEATURE_COLS = [
     "late_filing",
     "vix", "term_spread", "credit_spread",
 ]
+
+# Subset used by Phase 3 slice analyses (item #3/#6/#7). v2 ablation identified
+# Market-only pooled logit as the leading interpretable model (highest
+# point-estimate AUROC across all three families). Define it here so slice
+# analyses, calibration (item #8), and horizon analysis (item #4) cite a
+# single source of truth.
+MARKET_FEATURE_COLS = [
+    "ret_1m", "ret_3m", "ret_6m",
+    "vol_3m", "vol_6m", "drawdown_12m",
+]
+
 LABEL_COL = "label_a"
 
 # -----------------------------------------------------------------------------
