@@ -156,12 +156,23 @@ def _fit_fe(train: pd.DataFrame, test: pd.DataFrame, cols: list[str]) -> pd.Seri
 def _fit_hazard(train: pd.DataFrame, test: pd.DataFrame, cols: list[str]) -> pd.Series:
     """Discrete-time hazard logit: pooled logit + log-duration baseline.
 
-    Duration = months since first observation per firm. Approximates the
-    Shumway (2001) form without the full hazard panel restructure.
+    Duration = months since each firm's first observation in the combined
+    train + test panel — continuous across the split boundary, so test
+    predictions are not reset to duration = 1. Approximates Shumway (2001)
+    without the full hazard panel restructure.
     """
+    from .models import _global_duration_map  # local to avoid circular risk
+
+    dur = _global_duration_map(train, test)
+
     def with_log_duration(df: pd.DataFrame) -> pd.DataFrame:
-        df = df.copy().sort_values(["ticker", "date"])
-        df["months_obs"] = df.groupby("ticker").cumcount() + 1
+        df = df.copy()
+        df["months_obs"] = df.set_index(["ticker", "date"]).index.map(dur).values
+        if df["months_obs"].isna().any():
+            raise ValueError(
+                f"_fit_hazard: {int(df['months_obs'].isna().sum())} rows "
+                "have no entry in the global duration lookup"
+            )
         df["log_duration"] = np.log(df["months_obs"])
         return df
 
@@ -170,11 +181,9 @@ def _fit_hazard(train: pd.DataFrame, test: pd.DataFrame, cols: list[str]) -> pd.
     X_train = sm.add_constant(train_h[cols + ["log_duration"]])
     X_test = sm.add_constant(test_h[cols + ["log_duration"]])
     m = sm.Logit(train_h[LABEL_COL], X_train).fit(disp=0)
-    # Predictions must align back to the original test row order so the bootstrap
-    # firm_ids index matches.
-    preds = m.predict(X_test)
-    preds.index = test_h.index
-    return preds.reindex(test.index)
+    # Predictions inherit test_h's index (we never sorted), so they align
+    # with the bootstrap's firm_ids array taken from test["ticker"].values.
+    return m.predict(X_test)
 
 
 MODEL_FAMILIES: dict[str, callable] = {

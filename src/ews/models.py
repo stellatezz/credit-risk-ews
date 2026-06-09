@@ -19,6 +19,25 @@ import statsmodels.api as sm
 from .config import FEATURE_COLS, LABEL_COL
 
 
+def _global_duration_map(*splits: pd.DataFrame) -> pd.Series:
+    """Build a (ticker, date) -> duration lookup spanning multiple splits.
+
+    Duration is the number of monthly observations since each firm's first
+    appearance in the combined panel, starting at 1. The hazard model uses
+    this to ensure `log_duration` is continuous across train/val/test
+    boundaries — without it, a firm observed for 132 months in training
+    would reset to duration = 1 on its first val row, and the model's
+    log_duration coefficient would be applied at a value far outside the
+    range it was trained on.
+
+    Returns a Series indexed by (ticker, date) with integer duration values.
+    """
+    combined = pd.concat(splits, ignore_index=True)
+    combined = combined.sort_values(["ticker", "date"])
+    combined["_dur"] = combined.groupby("ticker").cumcount() + 1
+    return combined.set_index(["ticker", "date"])["_dur"]
+
+
 def _coef_table(model) -> pd.DataFrame:
     """Formatted coefficient summary with odds ratios + significance stars."""
     return pd.DataFrame({
@@ -145,18 +164,45 @@ def model_hazard_logit(
     val: pd.DataFrame,
     test: pd.DataFrame,
 ) -> tuple[object, dict[str, pd.Series]]:
-    """Discrete-time hazard logit with log-duration baseline (Shumway-style)."""
+    """Discrete-time hazard logit with log-duration baseline (Shumway-style).
+
+    Duration is computed across the combined train + val + test panel via
+    `_global_duration_map`, so that val and test predictions inherit each
+    firm's cumulative observation count rather than resetting to 1 at the
+    split boundary.
+    """
     print("\n" + "=" * 70)
     print("MODEL 3: DISCRETE-TIME HAZARD LOGIT (Shumway-style)")
     print("=" * 70)
 
+    # Build a (ticker, date) -> duration lookup that spans all three splits
+    # so log_duration is continuous across boundaries.
+    duration_lookup = _global_duration_map(train, val, test)
+
+    def _with_duration(split: pd.DataFrame) -> pd.DataFrame:
+        """Attach `duration` and `log_duration` columns to a split without
+        reordering its rows."""
+        s = split.copy()
+        s["duration"] = s.set_index(["ticker", "date"]).index.map(duration_lookup).values
+        missing = int(s["duration"].isna().sum())
+        if missing:
+            raise ValueError(
+                f"hazard model: {missing} rows in split have no entry in the "
+                "global duration lookup (rows must come from the same panel "
+                "passed to _global_duration_map)"
+            )
+        s["log_duration"] = np.log(s["duration"])
+        return s
+
+    # Build the Shumway training panel from train rows that already carry
+    # duration. This means train_haz duration matches whatever we use at
+    # predict time — no split-relative resetting.
+    train_with_dur = _with_duration(train)
     train_haz = (
-        _build_hazard_panel(train)
+        _build_hazard_panel(train_with_dur)
         .sort_values(["ticker", "date"])
         .reset_index(drop=True)
     )
-    train_haz["duration"] = train_haz.groupby("ticker").cumcount() + 1
-    train_haz["log_duration"] = np.log(train_haz["duration"])
 
     print(f"Hazard panel: {len(train_haz)} rows (was {len(train)})")
     print(f"  Firms with event in training: "
@@ -171,11 +217,12 @@ def model_hazard_logit(
     print("-" * 60)
     print(_coef_table(model).round(4).to_string())
 
+    # Predict on each raw split using the same global duration lookup.
+    # We deliberately do NOT sort or reset_index — predictions inherit each
+    # split's caller-supplied row order, matching the other two models.
     preds = {}
-    for name, split in [("train", train_haz), ("val", val), ("test", test)]:
-        s = split.copy().sort_values(["ticker", "date"]).reset_index(drop=True)
-        s["duration"] = s.groupby("ticker").cumcount() + 1
-        s["log_duration"] = np.log(s["duration"])
+    for name, split in [("train", train), ("val", val), ("test", test)]:
+        s = _with_duration(split)
         X = sm.add_constant(s[hazard_features])
         preds[name] = model.predict(X)
     return model, preds
