@@ -183,6 +183,20 @@ MARKET_FEATURE_COLS = [
     "vol_3m", "vol_6m", "drawdown_12m",
 ]
 
+# Industry-relative ("within-sector") market features (Phase 3 #2). Each raw
+# market feature is z-scored within its (industry, month) peer group, so the
+# value answers "is this firm unusual *for its sector* right now?". This gives a
+# pooled model the sector-baseline signal that FE gets from industry dummies —
+# but as features, so the model stays sliceable by industry. Built in
+# panel._add_industry_relative_features.
+MARKET_REL_FEATURE_COLS = [
+    "ret_1m_rel", "ret_3m_rel", "ret_6m_rel",
+    "vol_3m_rel", "vol_6m_rel", "drawdown_12m_rel",
+]
+
+# Deployed slice model after Phase 3 #2: raw market + sector-relative market.
+MARKET_PLUS_REL_FEATURE_COLS = MARKET_FEATURE_COLS + MARKET_REL_FEATURE_COLS
+
 LABEL_COL = "label_a"
 
 # -----------------------------------------------------------------------------

@@ -89,6 +89,27 @@ def plot_calibration(y_true: pd.Series, y_pred: pd.Series, model_name: str, file
     _save(fig, filename)
 
 
+def plot_calibration_comparison(y_true, preds_by_method: dict, filename: str) -> None:
+    """Reliability curves for raw vs Platt vs isotonic predictions on one axis.
+
+    `preds_by_method` maps method-name -> predicted-probability array. A curve
+    hugging the diagonal is well calibrated.
+    """
+    colors = {"raw": "#94a3b8", "platt": "#3b82f6", "isotonic": "#ef4444"}
+    fig, ax = plt.subplots(figsize=(7, 6))
+    for name, p in preds_by_method.items():
+        prob_true, prob_pred = calibration_curve(y_true, p, n_bins=8, strategy="quantile")
+        ax.plot(prob_pred, prob_true, "o-", linewidth=2, label=name,
+                color=colors.get(name))
+    ax.plot([0, 1], [0, 1], "k--", alpha=0.4, label="perfect")
+    ax.set(xlabel="Predicted probability", ylabel="Actual event rate",
+           title="Calibration: raw vs Platt vs isotonic (validation)")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    _save(fig, filename)
+
+
 # =============================================================================
 # Risk decile bars
 # =============================================================================

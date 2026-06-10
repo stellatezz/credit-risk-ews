@@ -24,7 +24,16 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from .config import FEATURE_COLS, FIRMS, LABEL_COL, LEAD_TIME_THRESHOLD, PATHS, TOP_K_FRACTION
+from .config import (
+    FEATURE_COLS,
+    FIRMS,
+    LABEL_COL,
+    LEAD_TIME_THRESHOLD,
+    MARKET_FEATURE_COLS,
+    MARKET_REL_FEATURE_COLS,
+    PATHS,
+    TOP_K_FRACTION,
+)
 
 
 # =============================================================================
@@ -302,6 +311,8 @@ def ablation_analysis(train: pd.DataFrame, test: pd.DataFrame) -> pd.DataFrame:
     subsets = {
         "Accounting only":   ["leverage", "liquidity_buffer", "wc_ratio", "wc_ratio_missing", "profitability"],
         "Market only":       ["ret_1m", "ret_3m", "ret_6m", "vol_3m", "vol_6m", "drawdown_12m"],
+        "Sector-rel only":   MARKET_REL_FEATURE_COLS,
+        "Market + sector-rel": MARKET_FEATURE_COLS + MARKET_REL_FEATURE_COLS,
         "Macro only":        ["vix", "term_spread", "credit_spread"],
         "Filing only":       ["late_filing"],
         "Acct + Market":     ["leverage", "liquidity_buffer", "wc_ratio", "wc_ratio_missing", "profitability",
@@ -496,3 +507,91 @@ def robustness_rolling_window(df: pd.DataFrame) -> pd.DataFrame:
     if len(rdf) > 0:
         print(f"\nMean AUROC: {rdf['auroc'].mean():.4f} +/- {rdf['auroc'].std():.4f}")
     return rdf
+
+
+# =============================================================================
+# Calibration (Phase 3 #1): Platt + isotonic on the deployed pooled logit
+# =============================================================================
+
+def _expected_calibration_error(y_true: np.ndarray, y_prob: np.ndarray, n_bins: int = 10) -> float:
+    """Expected Calibration Error: mean |confidence − accuracy| over equal-width
+    probability bins, weighted by bin population."""
+    y_true = np.asarray(y_true, dtype=float)
+    y_prob = np.asarray(y_prob, dtype=float)
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
+    idx = np.clip(np.digitize(y_prob, edges) - 1, 0, n_bins - 1)
+    n = len(y_true)
+    ece = 0.0
+    for b in range(n_bins):
+        mask = idx == b
+        if not mask.any():
+            continue
+        ece += mask.sum() / n * abs(y_true[mask].mean() - y_prob[mask].mean())
+    return float(ece)
+
+
+def calibration_analysis(
+    train: pd.DataFrame,
+    val: pd.DataFrame,
+    feature_cols: list[str],
+    label_col: str,
+) -> tuple[pd.DataFrame, dict[str, np.ndarray]]:
+    """Fit the deployed pooled logit, then Platt and isotonic calibration on top.
+
+    The base model is fit on train; the two calibrators are fit on the *train*
+    predictions and applied to the unseen *val* set. Reports Brier + ECE for
+    raw / Platt / isotonic (AUROC is unchanged — both calibrators are monotone,
+    so ranking is preserved; only the probability scale moves).
+
+    Caveat: fitting the calibrator on in-sample train scores is mildly
+    optimistic; a held-out calibration fold would be more rigorous. Val remains
+    unseen by both the base model and the calibrators, so the reported Brier/ECE
+    improvements are out-of-sample.
+
+    Returns (results_df, {"y_true", "raw", "platt", "isotonic"}) — the second
+    element feeds the reliability-curve plot.
+    """
+    from sklearn.isotonic import IsotonicRegression
+    from sklearn.linear_model import LogisticRegression
+
+    print("\n" + "=" * 70)
+    print("CALIBRATION: Platt + isotonic on the deployed pooled logit")
+    print("=" * 70)
+
+    m = sm.Logit(train[label_col], sm.add_constant(train[feature_cols])).fit(disp=0)
+    tr_p = np.clip(m.predict(sm.add_constant(train[feature_cols])).values, 1e-6, 1 - 1e-6)
+    va_p = np.clip(m.predict(sm.add_constant(val[feature_cols])).values, 1e-6, 1 - 1e-6)
+    y_tr = train[label_col].values.astype(int)
+    y_va = val[label_col].values.astype(int)
+
+    # Platt: logistic regression on the logit of the base score.
+    tr_logit = np.log(tr_p / (1 - tr_p)).reshape(-1, 1)
+    va_logit = np.log(va_p / (1 - va_p)).reshape(-1, 1)
+    platt = LogisticRegression().fit(tr_logit, y_tr)
+    va_platt = platt.predict_proba(va_logit)[:, 1]
+
+    # Isotonic: non-parametric monotone fit on the raw base probability.
+    iso = IsotonicRegression(out_of_bounds="clip").fit(tr_p, y_tr)
+    va_iso = iso.predict(va_p)
+
+    methods = {"raw": va_p, "platt": va_platt, "isotonic": va_iso}
+    base_rate = float(y_va.mean())
+    rows = []
+    for name, p in methods.items():
+        rows.append({
+            "method": name,
+            "brier": brier_score_loss(y_va, p),
+            "ece": _expected_calibration_error(y_va, p),
+            "auroc": roc_auc_score(y_va, p),
+            "mean_pred": float(np.mean(p)),
+            "base_rate": base_rate,
+        })
+    rdf = pd.DataFrame(rows)
+    print(rdf.round(4).to_string(index=False))
+
+    os.makedirs(PATHS.OUTPUTS, exist_ok=True)
+    out_path = os.path.join(PATHS.OUTPUTS, "calibration_results.csv")
+    rdf.to_csv(out_path, index=False)
+    print(f"\n  Saved calibration results to: {out_path}")
+
+    return rdf, {"y_true": y_va, **methods}

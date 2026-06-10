@@ -171,7 +171,10 @@ def main() -> None:
         _warn(f"Ablation failed: {e}")
 
     # -- Per-slice analyses (Phase 3 items #3 + #6 + #7) -----------------
-    from .config import MARKET_FEATURE_COLS  # local import; new constant
+    # Uses the Market + sector-relative feature set (Phase 3 #2): raw market
+    # features plus their within-industry z-scores, so the pooled model can
+    # tell a distressed firm from one that's merely normal-for-its-sector.
+    from .config import MARKET_PLUS_REL_FEATURE_COLS  # local import
     from .eval import evaluate_by_slice, error_analysis_by_slice  # local
     os.makedirs(PATHS.OUTPUTS, exist_ok=True)
 
@@ -180,7 +183,7 @@ def main() -> None:
             rdf = evaluate_by_slice(
                 train, eval_data,
                 slice_col=slice_col,
-                feature_cols=MARKET_FEATURE_COLS,
+                feature_cols=MARKET_PLUS_REL_FEATURE_COLS,
                 label_col=LABEL_COL,
             )
             rdf.to_csv(os.path.join(PATHS.OUTPUTS, f"{stem}_results.csv"), index=False)
@@ -192,13 +195,33 @@ def main() -> None:
             edf = error_analysis_by_slice(
                 train, eval_data,
                 slice_col=slice_col,
-                feature_cols=MARKET_FEATURE_COLS,
+                feature_cols=MARKET_PLUS_REL_FEATURE_COLS,
                 label_col=LABEL_COL,
             )
             edf.to_csv(os.path.join(PATHS.OUTPUTS, f"{stem}_errors.csv"), index=False)
             print(f"  Saved {stem} error analysis to: outputs/{stem}_errors.csv")
         except Exception as e:
             _warn(f"Per-slice errors ({slice_col}) failed: {e}")
+
+    # -- Calibration (Phase 3 #1) on the deployed Market + sector-rel model --
+    from .eval import calibration_analysis  # local
+    from .viz import plot_calibration_comparison  # local
+    try:
+        cal_df, cal_preds = calibration_analysis(
+            train, eval_data,
+            feature_cols=MARKET_PLUS_REL_FEATURE_COLS,
+            label_col=LABEL_COL,
+        )
+        try:
+            plot_calibration_comparison(
+                cal_preds["y_true"],
+                {k: cal_preds[k] for k in ("raw", "platt", "isotonic")},
+                "phase3_calibration_compare.png",
+            )
+        except Exception as e:
+            _warn(f"Calibration comparison chart failed: {e}")
+    except Exception as e:
+        _warn(f"Calibration analysis failed: {e}")
 
     try:
         robustness_rolling_window(panel)
