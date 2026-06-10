@@ -191,6 +191,36 @@ if os.path.isfile(coef_pooled):
         f"rows={len(coef_df)}",
     )
 
+print("\n[8] hazard model duration is continuous across train→val split")
+# Naming note: this test file uses `test` for the val window (2021-2023),
+# matching the rest of the file's convention. The hazard model's duration
+# must continue from the last train row to the first val row.
+from ews.models import _global_duration_map  # noqa: E402
+
+dlookup = _global_duration_map(train, test)
+common_firms = sorted(set(train["ticker"]) & set(test["ticker"]))
+check(
+    "at least one firm appears in both train and val",
+    len(common_firms) > 0,
+    f"found {len(common_firms)} firms",
+)
+if common_firms:
+    # Pick the firm with the most train rows for a stable assertion.
+    ticker = max(common_firms, key=lambda t: int((train["ticker"] == t).sum()))
+    train_firm = train[train["ticker"] == ticker].sort_values("date")
+    val_firm = test[test["ticker"] == ticker].sort_values("date")
+    last_train_date = train_firm["date"].iloc[-1]
+    first_val_date = val_firm["date"].iloc[0]
+    last_train_dur = int(dlookup[(ticker, last_train_date)])
+    first_val_dur = int(dlookup[(ticker, first_val_date)])
+    check(
+        f"{ticker}: val first-row duration = train last-row duration + 1",
+        first_val_dur == last_train_dur + 1,
+        f"last train dur={last_train_dur}, first val dur={first_val_dur} "
+        f"(expected {last_train_dur + 1})",
+    )
+
+
 print("\n" + "=" * 60)
 if FAILURES:
     print(f"ABLATION TEST FAILED — {len(FAILURES)} assertion(s) failed:")

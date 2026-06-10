@@ -19,6 +19,7 @@ st.write("""
 
 2. Feature Engineering
    ├─ Market features: rolling returns/vol/drawdowns
+   ├─ Sector-relative: market features z-scored within industry-month (Phase 3 #2)
    ├─ Accounting ratios: leverage, liquidity, working capital, profitability
    └─ Filing signals: late filing indicators (12b-25 forms)
 
@@ -60,9 +61,44 @@ market_features = """
 st.markdown(market_features)
 
 st.write("""
-**Key insight:** Market features are the most predictive group (ablation AUROC 0.733).
-Why? Because equity prices incorporate forward-looking information (market efficiency).
-A stock down 30% signals deterioration better than backward-looking accounting.
+**Key insight:** Market signals are the strongest *raw* feature group, because
+equity prices incorporate forward-looking information (market efficiency) — a
+stock down 30% signals deterioration better than backward-looking accounting.
+But **z-scoring these features within each sector (below) carries even more
+signal** — see the Feature-Group Analysis page.
+""")
+
+st.markdown("---")
+
+st.subheader("Sector-Relative Market Features (6 total — Phase 3 #2)")
+
+st.markdown("""
+Each of the six market features is **z-scored within its (industry, month) peer
+group** — a contemporaneous cross-sectional normalisation that asks "is this firm
+unusual *for its sector* right now?" instead of "is it volatile in absolute
+terms?". This lets the model separate a distressed firm from one merely sitting in
+a naturally jumpy industry (a distressed airline vs. ordinary airline volatility).
+""")
+
+sector_rel_features = """
+| Feature | Calculation | Interpretation |
+|---------|-------------|-----------------|
+| **ret_1m_rel / ret_3m_rel / ret_6m_rel** | (ret − industry-month mean) / industry-month std | Momentum vs sector peers this month |
+| **vol_3m_rel / vol_6m_rel** | (vol − industry-month mean) / industry-month std | Volatility vs peers; +ve = unusually shaky *for its sector* |
+| **drawdown_12m_rel** | (drawdown − industry-month mean) / industry-month std | Peak-to-trough loss relative to peers |
+"""
+st.markdown(sector_rel_features)
+
+st.write("""
+**Why it matters:** gives a *pooled* model the within-sector signal that fixed
+effects get from industry dummies — but as features, so the model stays
+interpretable and sliceable by industry. Empirically the strongest feature group:
+pooled AUROC 0.65 → **0.71**, AUPRC 0.18 → **0.27**.
+
+**No look-ahead:** computed from *same-month* peers only (mean/std over firms in
+the same industry that month) — no future data, the same cross-section an analyst
+would see at the time. Single-firm industry-months have no peer spread, so their
+relative value is set to 0. Built in `panel._add_industry_relative_features`.
 """)
 
 st.markdown("---")
@@ -250,6 +286,7 @@ st.write("""
 **Implementation:**
 
 ✅ **Market data:** Prices are observed at month-end → use for returns/vol/drawdowns
+✅ **Sector-relative:** z-scored against *same-month* industry peers only → contemporaneous, no future data
 ✅ **Accounting:** Balanced sheet at fiscal year-end Q4 (filed ~60 days later) → carry forward to next month-end
 ✅ **Macros:** VIX, yields, spreads are published daily → month-end snapshots
 ✅ **Label (forward):** Computed 12 months ahead of month t → no leakage into training

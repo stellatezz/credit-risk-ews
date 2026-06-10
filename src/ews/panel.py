@@ -39,6 +39,9 @@ ASCII merge pipeline:
                                                  PANEL
 """
 
+import os
+
+import numpy as np
 import pandas as pd
 
 from .config import (
@@ -46,9 +49,43 @@ from .config import (
     FIRMS,
     LABEL_COL,
     PANEL_START_YEAR,
+    PATHS,
     TRAIN_END_YEAR,
     VAL_END_YEAR,
 )
+
+# Raw market features that get a within-(industry, month) z-scored counterpart.
+_REL_BASE_COLS = ["ret_1m", "ret_3m", "ret_6m", "vol_3m", "vol_6m", "drawdown_12m"]
+
+
+def _add_industry_relative_features(panel: pd.DataFrame) -> pd.DataFrame:
+    """Add within-(industry, month) z-scores of the raw market features.
+
+    For each market feature, ``rel = (x - mean) / std`` is computed across all
+    firms in the same industry in the same month. This is a *contemporaneous*
+    cross-sectional normalisation — same-month peers only, no future or label
+    information — that lets a pooled model ask "is this firm unusual *for its
+    sector* right now?" (e.g. a distressed airline vs. ordinary airline
+    volatility). Single-firm industry-months have no peer spread, so their
+    relative value is set to 0 (no relative signal).
+    """
+    for col in _REL_BASE_COLS:
+        grp = panel.groupby(["industry", "date"])[col]
+        mean = grp.transform("mean")
+        std = grp.transform("std")  # ddof=1 → NaN when the group has < 2 firms
+        rel = (panel[col] - mean) / std
+        panel[f"{col}_rel"] = rel.replace([np.inf, -np.inf], np.nan).fillna(0.0)
+    return panel
+
+
+def _load_firm_categories() -> pd.DataFrame:
+    """Read data/firm_categories.csv → DataFrame[ticker, sector_raw, archetype, purpose].
+
+    Repo-root-anchored path so callers don't need a working directory.
+    """
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    path = os.path.join(repo_root, "data", "firm_categories.csv")
+    return pd.read_csv(path)
 
 
 def assemble_panel(
@@ -85,6 +122,12 @@ def assemble_panel(
     panel["month"] = panel["date"].dt.month
     panel["firm_name"] = panel["ticker"].map(lambda t: FIRMS[t]["name"])
 
+    # 4b. Attach archetype + raw sector (parsed from Phase 2 sample-company doc).
+    #     Left-join so a firm missing from firm_categories.csv keeps a NaN
+    #     archetype rather than dropping the row silently.
+    cats = _load_firm_categories()[["ticker", "sector_raw", "archetype"]]
+    panel = panel.merge(cats, on="ticker", how="left")
+
     # 5. Filter to modeling window + stable sort
     panel = panel[panel["year"] >= PANEL_START_YEAR].copy()
     panel = panel.sort_values(["ticker", "date"]).reset_index(drop=True)
@@ -104,6 +147,10 @@ def assemble_panel(
           f"Date range: {panel['date'].min().strftime('%Y-%m')} → "
           f"{panel['date'].max().strftime('%Y-%m')}")
     print(f"  Overall event rate: {panel[LABEL_COL].mean():.1%}")
+
+    # 8. Sector-relative market features (Phase 3 #2). Computed on the final
+    #    cleaned panel so the peer group = firms actually in the model.
+    panel = _add_industry_relative_features(panel)
 
     return panel
 

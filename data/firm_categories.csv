@@ -1,0 +1,81 @@
+ticker,sector_raw,archetype,purpose
+GE,Industrial,Distressed,Historical stress case
+F,Auto,Cyclical,Macro-sensitive cyclical firm
+BBBY,Retail,Distressed,Bankruptcy / distress example
+XOM,Energy,Commodity-sensitive,Stable energy benchmark
+CHK,Energy,Distressed,Bankruptcy / distressed case
+INTC,Technology,Stable,Competitive pressure example
+SNAP,Technology,Growth,High-volatility growth case
+PFE,Healthcare,Defensive,Stable defensive benchmark
+SPG,Real Estate,Rate-sensitive,Interest-rate-sensitive firm
+AAL,Airline,Distressed,High-risk cyclical case
+AAPL,Technology,Stable,Stable benchmark
+MSFT,Technology,Stable,Stable benchmark
+NVDA,Semiconductor,Growth,Volatile growth
+AMD,Semiconductor,Cyclical,Volatile cyclical tech
+MU,Semiconductor,Cyclical,Cyclical tech
+CSCO,Technology,Stable,Stable comparison
+ORCL,Technology,Stable,Stable comparison
+CRM,Software,Growth,Growth comparison
+IBM,Legacy Technology,Distressed,Mature restructuring case
+META,Communication,Growth,Volatile large-cap
+GOOGL,Communication,Stable,Stable large-cap
+NFLX,Media,Growth,Volatile consumer-tech
+PYPL,Fintech,Stable,Transition / stress case
+SQ,Fintech,Growth,High-volatility growth
+UBER,Platform Economy,Growth,Growth / volatile
+AMZN,Consumer,Stable,Stable benchmark
+TSLA,Auto,Growth,High volatility
+GM,Auto,Cyclical,Cyclical comparison
+HD,Consumer Retail,Stable,Housing-sensitive
+LOW,Consumer Retail,Stable,Housing-sensitive
+NKE,Consumer Brand,Stable,Demand-sensitive
+SBUX,Consumer,Stable,Demand-sensitive
+MCD,Defensive Consumer,Defensive,Stable comparison
+TGT,Retail,Stable,Retail comparison
+WMT,Retail,Defensive,Defensive benchmark
+COST,Retail,Defensive,Defensive benchmark
+M,Retail,Distressed,Stress case
+KSS,Retail,Distressed,Stress case
+GPS,Retail,Cyclical,Stress-prone retail
+ROST,Retail,Stable,Stable comparison
+BA,Aerospace,Stable,Major stress case
+CAT,Industrials,Stable,Macro-sensitive
+DE,Industrials,Stable,Macro-sensitive
+MMM,Industrials,Stable,Litigation / stress case
+HON,Industrials,Stable,Stable comparison
+UPS,Logistics,Stable,Macro-sensitive
+FDX,Logistics,Stable,Macro-sensitive
+DAL,Airline,Cyclical,Cyclical
+UAL,Airline,Cyclical,Cyclical
+LUV,Airline,Cyclical,Cyclical
+CVX,Energy,Stable,Stable benchmark
+COP,Energy,Commodity-sensitive,Commodity-sensitive
+OXY,Energy,Stable,Leveraged energy
+SLB,Oil Services,Stable,Energy-cycle exposure
+HAL,Oil Services,Stable,Energy-cycle exposure
+FCX,Materials,Commodity-sensitive,Commodity-sensitive
+NUE,Steel,Cyclical,Cyclical
+DOW,Chemicals,Cyclical,Cyclical
+ALB,Materials,Commodity-sensitive,Volatile commodity
+MOS,Materials,Commodity-sensitive,Commodity-sensitive
+JNJ,Healthcare,Defensive,Defensive benchmark
+MRK,Healthcare,Defensive,Defensive benchmark
+ABBV,Healthcare,Stable,Stable comparison
+BMY,Healthcare,Stable,Stable comparison
+GILD,Healthcare,Stable,Mature biotech
+AMGN,Healthcare,Stable,Stable comparison
+MDT,Healthcare,Stable,Stable comparison
+CVS,Healthcare,Defensive,Mixed defensive
+UNH,Healthcare,Stable,Stable benchmark
+TMO,Healthcare,Stable,Stable benchmark
+AMT,REIT,Rate-sensitive,Rate-sensitive
+PLD,REIT,Rate-sensitive,Rate-sensitive
+O,REIT,Rate-sensitive,Rate-sensitive
+VTR,REIT,Rate-sensitive,Rate-sensitive
+T,Telecom,Stable,Leveraged
+VZ,Telecom,Stable,Leveraged
+KO,Consumer Staples,Defensive,Defensive benchmark
+PEP,Consumer Staples,Defensive,Defensive benchmark
+PG,Consumer Staples,Defensive,Defensive benchmark
+KHC,Consumer Staples,Stable,Past stress case

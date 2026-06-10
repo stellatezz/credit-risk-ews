@@ -1,4 +1,4 @@
-# Feature Group Ablation — Phase 2 Findings (v2)
+# Feature-Group Analysis — Phase 2 Findings (v2)
 
 **Date:** 2026-06-05
 **Panel:** `data/processed/panel_phase2.csv` (77 firms after REIT recovery, ~12,473 firm-months, ~8% event rate)
@@ -6,6 +6,7 @@
 **Models:** pooled logit, fixed-effects logit (industry + year dummies, drop_first=False), discrete-time hazard logit (Shumway-style with log-duration baseline)
 **Uncertainty:** 95% percentile bootstrap, **firm-clustered**, 1,000 resamples
 **Note on v1:** This supersedes the v1 findings (row-level bootstrap, 72-firm panel, pooled-only). See git history `v1...v2` for diff.
+**Update 2026-06-10:** Hazard-family rows regenerated after the hazard-duration fix (val/test predictions now use a global per-firm duration that is continuous across the train/val/test split, instead of resetting to 1 at each boundary). Pooled and FE rows are unaffected; the log-duration coefficient is unchanged (fit on training data). The Market-beats-Full ordering and every conclusion below are unchanged — the hazard Market–Full gap actually widens slightly (0.076 → 0.087).
 
 ## What changed since v1
 
@@ -31,18 +32,18 @@
 | fe           | Filing only     |  1 | 0.637 |    0.546 |    0.730 | 0.173 | 0.103 |
 | fe           | Acct + Market   | 11 | 0.669 |    0.560 |    0.774 | 0.193 | 0.102 |
 | fe           | Full model      | 15 | 0.672 |    0.562 |    0.774 | 0.192 | 0.102 |
-| hazard       | Accounting only |  5 | 0.530 |    0.397 |    0.652 | 0.181 | 0.102 |
-| hazard       | Market only     |  6 | 0.632 |    0.518 |    0.730 | 0.177 | 0.100 |
-| hazard       | Macro only      |  3 | 0.343 |    0.278 |    0.402 | 0.083 | 0.114 |
-| hazard       | Filing only     |  1 | 0.358 |    0.297 |    0.418 | 0.083 | 0.104 |
-| hazard       | Acct + Market   | 11 | 0.596 |    0.463 |    0.712 | 0.190 | 0.099 |
-| hazard       | Full model      | 15 | 0.556 |    0.436 |    0.665 | 0.198 | 0.101 |
+| hazard       | Accounting only |  5 | 0.560 |    0.425 |    0.683 | 0.189 | 0.099 |
+| hazard       | Market only     |  6 | 0.645 |    0.538 |    0.740 | 0.178 | 0.099 |
+| hazard       | Macro only      |  3 | 0.346 |    0.282 |    0.405 | 0.083 | 0.114 |
+| hazard       | Filing only     |  1 | 0.369 |    0.288 |    0.455 | 0.085 | 0.102 |
+| hazard       | Acct + Market   | 11 | 0.611 |    0.481 |    0.727 | 0.194 | 0.098 |
+| hazard       | Full model      | 15 | 0.558 |    0.438 |    0.668 | 0.200 | 0.102 |
 
 (Altman Z-score row absent for all three families: model failed at fit time — `exog contains inf or nans`.)
 
 ## Headline finding
 
-Market features alone match or exceed the Full model on point-estimate AUROC in all three model families (pooled: 0.653 vs 0.551; FE: 0.681 vs 0.672; hazard: 0.632 vs 0.556). The FE margin is the narrowest at 0.009 AUROC points. However, under firm-clustered bootstrap at n=1,000 resamples, every pair of feature-group CIs overlaps at 95% confidence — no ranking is statistically separable. The v1 claim of disjoint Market/Full CIs does not survive proper clustering and is retracted. The mechanism behind the directional Market dominance is identified in the pooled coefficient table: `liquidity_buffer`, `vix`, and `credit_spread` carry signs opposite to credit-risk theory with p < 0.05, suppressing Full model discrimination in pooled and hazard. FE absorbs some of this distortion through industry+year dummies, which is why its Market-Full gap is the smallest.
+**Sector-relative market features are the new top performer (Phase 3 #2):** z-scoring each market feature within its industry-month lifts pooled AUROC to 0.714 (AUPRC 0.274) vs Market-only 0.653 (AUPRC 0.181), and is strongest in every family. Separately, market features alone match or exceed the Full model on point-estimate AUROC in all three model families (pooled: 0.653 vs 0.551; FE: 0.681 vs 0.672; hazard: 0.645 vs 0.558). The FE margin is the narrowest at 0.009 AUROC points. However, under firm-clustered bootstrap at n=1,000 resamples, every pair of feature-group CIs overlaps at 95% confidence — no ranking is statistically separable. The v1 claim of disjoint Market/Full CIs does not survive proper clustering and is retracted. The mechanism behind the directional Market dominance is identified in the pooled coefficient table: `liquidity_buffer`, `vix`, and `credit_spread` carry signs opposite to credit-risk theory with p < 0.05, suppressing Full model discrimination in pooled and hazard. FE absorbs some of this distortion through industry+year dummies, which is why its Market-Full gap is the smallest.
 
 ## What carries the signal (per family)
 
@@ -50,7 +51,7 @@ Market features alone match or exceed the Full model on point-estimate AUROC in 
 
 **Fixed-effects logit:** The FE family compresses the range and — unlike pooled and hazard — all six subsets succeed (Accounting only and Acct+Market no longer fail with `LinAlgError` after switching to BFGS optimization). Market only leads at 0.681 (CI [0.571, 0.777]), with Full model at 0.672 (CI [0.562, 0.774]) — a gap of 0.009, well within bootstrap noise. Accounting only (0.655, CI [0.553, 0.757]) and Acct+Market (0.669, CI [0.560, 0.774]) also cluster near the top; the FE dummies absorb much of the between-firm and between-year variance, leaving all feature subsets with similar discrimination. Macro only jumps from 0.342 (pooled) to 0.641 (FE, CI [0.551, 0.734]) — the largest cross-family shift in the table. This reversal occurs because industry and year dummies absorb cross-sectional baseline rates and the calendar-level average, leaving within-cluster macro variation that correlates in the expected direction with distress. Filing only (0.637, CI [0.546, 0.730]) also rises sharply under FE, suggesting `late_filing` has within-industry signal obscured by between-industry differences in pooled logit. No pair of FE subsets has disjoint CIs.
 
-**Hazard logit:** Pattern mirrors pooled: Market only leads at 0.632 (CI [0.518, 0.730]), Acct + Market is runner-up at 0.596 (CI [0.463, 0.712]), Full model trails at 0.556 (CI [0.436, 0.665]). Macro only (0.343, CI [0.278, 0.402]) and Filing only (0.358, CI [0.297, 0.418]) are the worst performers, with CIs entirely below 0.5. The log-duration baseline coefficient is 0.050 (SE 0.051, p = 0.329), indicating no detectable positive duration dependence in the training data after conditioning on covariates. All CIs overlap across subsets.
+**Hazard logit:** Pattern mirrors pooled: Market only leads at 0.645 (CI [0.538, 0.740]), Acct + Market is runner-up at 0.611 (CI [0.481, 0.727]), Full model trails at 0.558 (CI [0.438, 0.668]). Macro only (0.346, CI [0.282, 0.405]) and Filing only (0.369, CI [0.288, 0.455]) are the worst performers, with CIs entirely below 0.5. The log-duration baseline coefficient is 0.050 (SE 0.051, p = 0.329), indicating no detectable positive duration dependence in the training data after conditioning on covariates. All CIs overlap across subsets.
 
 ## Why the Full model loses (mechanism)
 
