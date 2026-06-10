@@ -26,11 +26,6 @@ spec.md
 proposal.md
 DASHBOARD_README.md
 
-# Generated outputs
-outputs/ablation_results.csv
-outputs/full_model_coefficients_*.csv
-outputs/sector_results.csv
-outputs/category_results.csv
-outputs/sector_errors.csv
-outputs/category_errors.csv
-outputs/calibration_results.csv
+# Generated outputs — committed so the Streamlit app can be hosted from GitHub
+# (the data pipeline can't run on Streamlit Cloud). Regenerate locally with
+# `MPLBACKEND=Agg python src/run.py`.
