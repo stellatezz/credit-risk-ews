@@ -1,6 +1,6 @@
 # Credit Risk Early-Warning System (EWS)
 
-An interpretable, open-data credit risk early-warning system for US-listed non-financial firms, 2010–2025. Each month, for each firm in the panel, the pipeline outputs a probability of **credit deterioration** over the next 12 months — together with a risk-trajectory view for analyst watchlist and escalation triage.
+An interpretable, open-data credit risk early-warning system for US-listed non-financial firms, 2010–2024. Each month, for each firm in the panel, the pipeline outputs a probability of **credit deterioration** over the next 12 months — together with a risk-trajectory view for analyst watchlist and escalation triage.
 
 Not for trading. For credit-risk oversight.
 
@@ -19,11 +19,13 @@ Every model is a standard interpretable regression (logistic, fixed-effects, dis
 
 ## Where we are
 
-Phase 1 (prototype, due **April 24**) is code-complete on a **10-firm toy panel** (9 with complete data; CHK was delisted post-bankruptcy in 2020 and yfinance has no history for it — see `src/ews/config.py::ALLOWED_SHORT_HISTORY`). The pipeline runs end-to-end and produces the four evaluation charts the proposal commits to. See `outputs/figures/` and `docs/02_OUTPUTS.md`.
+**Phase 2 + Phase 3 diagnostics — current as of June 2026.** The live panel is `data/processed/panel_phase2.csv`: **77 firms, 12,473 firm-months, 2010–2024**, with **real SEC EDGAR fundamentals** (Allen) and **real FRED macros** now integrated. The earlier 10-firm toy panel (`panel_phase1.csv`) is retained — it validated the pipeline end-to-end. The one data source still outstanding is **8-K bankruptcy labels** (`label_b`, Darren); the panel currently labels on **`label_a`** alone (≥40% peak-to-trough drawdown over the next 12 months, ~8.5% base rate).
 
-The proposal's Phase 1 target is 30–50 firms on a shorter horizon; the current 10-firm panel validates the full pipeline end-to-end. **Phase 2** expands to 60–80 firms with real SEC fundamentals (Allen), real FRED macros, and 8-K bankruptcy labels (Darren).
+**Diagnostics delivered (Phase 3).** Sector-relative ("within-industry") market features; probability **calibration** (Platt + isotonic); **per-slice evaluation** by sector and firm archetype with firm-clustered CIs; **feature-group ablation**; and a **false-positive / false-negative cost analysis** (cost frontier, cost-weighted thresholds, evaluation on a held-out 2024 test set, Altman-Z benchmark). Results are browsable in the **Streamlit app** (`project_home.py` + `pages/`), hosted from GitHub off committed artifacts in `outputs/`.
 
-**Models.** Phase 1's committed model (per proposal Table 2) is the **pooled logistic regression**. The current run also fits a **fixed-effects panel logit** and a **Shumway-style discrete-time hazard logit** — these are delivered ahead of schedule as a preview of Phase 2 work; treat their metrics as provisional until the 60–80 firm panel lands.
+**Models.** The committed, deployed model is the **pooled logistic regression**; the deployed *slice* model adds the **sector-relative features** (raw market features plus their within-industry z-scores). A **fixed-effects panel logit** and a **Shumway-style discrete-time hazard logit** are also fit (the hazard duration bug is fixed). In the current ablation FE scores highest, but its industry/year dummies don't transfer forward cleanly, so **pooled remains the deployed choice** — treat FE/hazard metrics as provisional.
+
+> **Honest limitation.** The model works as a top-decile watchlist for already-distressed firms and beats Altman Z, but it cannot rank distress within Stable/Cyclical/Growth firms (within-sector AUROC ≈ 0.5). That gap is a *ranking* failure, not a thresholding one, and is not fixed by the SEC fundamentals in the panel (they don't help against a price-drawdown label) — see `outputs/fp_fn_findings.md`.
 
 ## Repo map
 
@@ -31,35 +33,47 @@ The proposal's Phase 1 target is 30–50 firms on a shorter horizon; the current
 .
 ├── README.md                     ← you are here
 ├── CONTRIBUTING.md               ← how to plug work in
-├── TODOS.md                      ← Phase 2+ backlog
+├── TODOS.md                      ← backlog
 ├── requirements.txt              ← pinned deps
+├── project_home.py               ← Streamlit app home (multipage; see pages/)
 ├── docs/
 │   ├── 01_PIPELINE.md            ← data flow: inputs → outputs (ASCII diagram + module map)
-│   ├── 02_OUTPUTS.md             ← what comes out + how to read the four charts
+│   ├── 02_OUTPUTS.md             ← what comes out + how to read the charts
 │   ├── 03_USAGE.md               ← how an analyst uses the outputs (1-page workflow)
 │   ├── 04_PRESENTATION.md        ← how to present to markers / committee
-│   └── 05_PLUGGING_IN_REAL_DATA.md  ← HOWTO for Allen + Darren (loader contract)
+│   ├── 05_PLUGGING_IN_REAL_DATA.md  ← HOWTO for Allen + Darren (loader contract)
+│   └── superpowers/              ← design specs + plans (e.g. the FP/FN analysis design)
 ├── src/
 │   ├── ews/                      ← the pipeline package (see docs/01_PIPELINE.md)
 │   │   ├── config.py             ← firms, features, thresholds, paths
 │   │   ├── loaders.py            ← team-facing data-source contract
 │   │   ├── features.py           ← market-feature engineering
 │   │   ├── labels.py             ← Label A construction (Label B goes here too)
-│   │   ├── panel.py              ← merge + time split
+│   │   ├── panel.py              ← merge + sector-relative features + time split
 │   │   ├── models.py             ← pooled / FE / hazard logit
-│   │   ├── eval.py               ← metrics + ablation + robustness
-│   │   ├── viz.py                ← the four charts
-│   │   └── run.py                ← the orchestrator
-│   └── run.py                    ← pipeline entry point (thin wrapper; sets sys.path then calls ews.pipeline.main)
+│   │   ├── eval.py               ← metrics + ablation + per-slice + calibration
+│   │   ├── viz.py                ← evaluation charts
+│   │   └── pipeline.py           ← the orchestrator (main)
+│   └── run.py                    ← entry point (thin wrapper; sets sys.path, calls ews.pipeline.main)
+├── pages/                        ← Streamlit pages 1–7 (Model Eval, Firm, Methodology, About,
+│                                    Feature-Group, Sector/Category, False Positives vs Negatives)
+├── scripts/                      ← standalone analyses
+│   ├── extract_firm_categories.py   ← archetype parser
+│   ├── fp_fn_analysis.py            ← FP/FN cost frontier + held-out-test operating points
+│   └── fundamentals_slice_test.py   ← do fundamentals rescue the failing slices?
 ├── tests/
-│   └── smoke_test.py             ← 11 assertions on the refactor's new paths
+│   ├── smoke_test.py
+│   ├── ablation_test.py
+│   └── category_sector_test.py
 ├── data/
 │   ├── raw/                      ← yfinance cache (committed for reproducibility)
 │   ├── interim/                  ← one CSV per loader (inspectable)
 │   └── processed/
-│       └── panel_phase1.csv      ← 1,490 firm-months × 23 columns
-├── outputs/
-│   ├── figures/                  ← the four Phase 1 charts
+│       ├── panel_phase1.csv      ← 10-firm toy panel (1,490 × 23) — legacy
+│       └── panel_phase2.csv      ← live panel (12,473 firm-months × 32, 77 firms)
+├── outputs/                      ← committed so the Streamlit app can be hosted from GitHub
+│   ├── figures/                  ← phase1 / phase2 / phase3 charts + FP/FN frontier
+│   ├── *_results.csv, *_errors.csv, *_findings.md   ← ablation, per-slice, FP/FN
 │   └── pipeline_overview.html
 └── reference/                    ← canonical source of truth
     ├── Detailed Proposal v1.docx.md
@@ -79,26 +93,33 @@ python src/run.py
 # or equivalently (PYTHONPATH=src is needed because there's no pyproject.toml yet):
 PYTHONPATH=src python -m ews.pipeline
 
+# Regenerate the FP/FN cost analysis (standalone)
+MPLBACKEND=Agg python scripts/fp_fn_analysis.py
+
+# Browse all results in the dashboard
+streamlit run project_home.py
+
 # Verify your setup
 python tests/smoke_test.py
 ```
 
 Outputs are written automatically — no manual copying required:
 
-- `data/processed/panel_phase1.csv` — the modeling panel (1,490 firm-months × 23 columns)
+- `data/processed/panel_phase2.csv` — the live modeling panel (12,473 firm-months × 32 columns, 77 firms)
 - `data/interim/{prices,market_features,fundamentals,macros,labels}.csv` — per-source intermediate tables (Excel-friendly, with a provenance header)
-- `outputs/figures/phase1_{roc_pr,calibration,deciles,trajectories}.png` — the four evaluation charts
+- `outputs/figures/phase2_{roc_pr,calibration,deciles,trajectories}.png` — core evaluation charts
+- `outputs/figures/phase3_{calibration_compare,fp_fn_frontier}.png` + `outputs/{ablation,sector,category,fp_fn}_*.{csv,md}` — Phase 3 diagnostics
 
 ## Data sources
 
 Four families feed the panel. Full schema contract and real-loader HOWTO lives in `docs/05_PLUGGING_IN_REAL_DATA.md`.
 
-| Family | Phase 1 source | Phase 2 owner | Source name |
+| Family | Source | Owner | Status |
 | :--- | :--- | :--- | :--- |
-| Equity prices | yfinance (real, cached) | Shrey | `load_prices(source="yfinance")` |
-| Firm fundamentals | Placeholder synthetic | Allen | `load_fundamentals(source="sec")` |
-| Macro stress | Synthetic (regime-aware) | TBD | `load_macros(source="fred")` |
-| Labels (drawdown + 8-K) | Label A only (drawdown); `label_b` NaN | Darren | `load_labels(source="8k")` |
+| Equity prices | yfinance (real, cached) | Shrey | integrated |
+| Firm fundamentals | SEC EDGAR (real) | Allen | integrated |
+| Macro stress | FRED (real) | — | integrated |
+| Labels | Label A drawdown (real); 8-K `label_b` | Darren | `label_a` done; `label_b` pending |
 
 No-look-ahead is a hard rule: fundamentals align to **filing date**, not period-end; market and macro aggregate to month-end using only data available at time t.
 
