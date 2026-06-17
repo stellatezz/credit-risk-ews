@@ -29,3 +29,6 @@ DASHBOARD_README.md
 # Generated outputs — committed so the Streamlit app can be hosted from GitHub
 # (the data pipeline can't run on Streamlit Cloud). Regenerate locally with
 # `MPLBACKEND=Agg python src/run.py`.
+
+# Claude/superpowers working files (design specs, plans) — not project deliverables
+docs/superpowers/
