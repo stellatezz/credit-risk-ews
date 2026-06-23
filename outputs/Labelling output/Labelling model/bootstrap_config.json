@@ -1,0 +1,7 @@
+{
+  "method": "firm_year_block_bootstrap",
+  "fixed_test_replicates": 300,
+  "rolling_replicates": 150,
+  "seed": 20260621,
+  "financial_features": "excluded_from_formal_models"
+}
