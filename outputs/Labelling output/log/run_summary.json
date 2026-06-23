@@ -1,0 +1,12 @@
+{
+  "n_masterlist": 100,
+  "n_price_ok": 100,
+  "n_price_covers_2025_12": 99,
+  "n_panel_rows": 19027,
+  "n_panel_tickers": 100,
+  "date_min": "2010-01-31",
+  "date_max": "2026-06-30",
+  "warmup_rows_2009_excluded_from_formal_outputs": 1049,
+  "fixed_test_evaluable_rows": 1782,
+  "label_b_events": 9
+}

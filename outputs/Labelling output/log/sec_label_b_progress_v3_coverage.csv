@@ -1,0 +1,101 @@
+﻿ticker,sec_symbol,sec_cik,sec_title,coverage_status,n_8k_filings_checked,n_item_103_events_found,first_8k_filing_date,last_8k_filing_date,notes
+GE,GE,40545,GENERAL ELECTRIC CO,ok,257,0,2010-01-22,2026-06-11,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+F,F,37996,FORD MOTOR CO,ok,423,0,2010-01-04,2026-05-21,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+BBBY,BBBY,886158,Bed Bath & Beyond,ok,189,4,2010-01-06,2023-09-29,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+XOM,XOM,34088,EXXON MOBIL CORP,ok,223,0,2010-02-01,2026-05-29,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+CHK,EXE,895126,EXPAND ENERGY Corp,ok,357,2,2010-01-04,2026-06-04,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+INTC,INTC,50863,INTEL CORP,ok,299,0,2010-01-12,2026-05-15,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+SNAP,SNAP,1564408,Snap Inc,ok,87,0,2017-05-10,2026-05-20,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+PFE,PFE,78003,PFIZER INC,ok,210,0,2010-02-03,2026-06-18,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+SPG,SPG,1063761,SIMON PROPERTY GROUP INC.,ok,158,0,2010-02-05,2026-05-15,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+AAL,AAL,6201,American Airlines Group Inc.,ok,545,2,2010-01-06,2026-06-16,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+AAPL,AAPL,320193,Apple Inc.,ok,159,0,2010-01-25,2026-04-30,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+MSFT,MSFT,789019,MICROSOFT CORP,ok,182,0,2010-01-28,2026-06-05,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+NVDA,NVDA,1045810,NVIDIA CORP,ok,157,0,2010-02-17,2026-06-18,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+AMD,AMD,2488,ADVANCED MICRO DEVICES INC,ok,234,0,2010-01-21,2026-05-15,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+MU,MU,723125,MICRON TECHNOLOGY INC,ok,289,0,2010-01-15,2026-06-09,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+CSCO,CSCO,858877,"CISCO SYSTEMS, INC.",ok,238,0,2010-02-03,2026-05-13,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+ORCL,ORCL,1341439,ORACLE CORP,ok,150,0,2010-01-21,2026-06-10,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+CRM,CRM,1108524,"Salesforce, Inc.",ok,160,0,2014-08-21,2026-06-02,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+IBM,IBM,51143,INTERNATIONAL BUSINESS MACHINES CORP,ok,324,0,2010-01-19,2026-05-28,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+META,META,1326801,"Meta Platforms, Inc.",ok,137,0,2012-06-25,2026-05-29,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+GOOGL,GOOGL,1652044,Alphabet Inc.,ok,112,0,2015-10-22,2026-06-11,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+NFLX,NFLX,1065280,NETFLIX INC,ok,169,0,2010-01-27,2026-06-05,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+PYPL,PYPL,1633917,"PayPal Holdings, Inc.",ok,143,0,2015-07-01,2026-05-21,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+SQ,XYZ,1512673,"Block, Inc.",ok,135,0,2015-11-24,2026-06-18,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+UBER,UBER,1543151,"Uber Technologies, Inc",ok,113,0,2019-05-14,2026-05-11,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+AMZN,AMZN,1018724,AMAZON COM INC,ok,164,0,2010-01-28,2026-06-12,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+TSLA,TSLA,1318605,"Tesla, Inc.",ok,245,0,2010-08-04,2026-04-22,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+GM,GM,1467858,General Motors Co,ok,331,0,2010-01-07,2026-06-04,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+HD,HD,354950,"HOME DEPOT, INC.",ok,175,0,2010-02-23,2026-05-26,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+LOW,LOW,60667,LOWES COMPANIES INC,ok,183,0,2010-02-22,2026-06-02,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+NKE,NKE,320187,"NIKE, Inc.",ok,178,0,2010-03-17,2026-06-18,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+SBUX,SBUX,829224,STARBUCKS CORP,ok,207,0,2010-01-20,2026-06-12,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+MCD,MCD,63908,MCDONALDS CORP,ok,269,0,2010-01-15,2026-05-22,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+TGT,TGT,27419,TARGET CORP,ok,209,0,2010-01-07,2026-06-12,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+WMT,WMT,104169,Walmart Inc.,ok,220,0,2010-01-28,2026-06-05,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+COST,COST,909832,COSTCO WHOLESALE CORP /NEW,ok,202,0,2010-01-29,2026-05-28,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+M,M,794367,"Macy's, Inc.",ok,218,0,2010-02-02,2026-06-03,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+KSS,KSS,885639,KOHLS Corp,ok,274,0,2010-01-07,2026-06-15,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+GPS,GAP,39911,GAP INC,ok,254,0,2010-01-07,2026-05-28,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+ROST,ROST,745732,"ROSS STORES, INC.",ok,156,0,2010-02-04,2026-05-27,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+BA,BA,12927,BOEING CO,ok,229,0,2010-01-27,2026-04-22,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+CAT,CAT,18230,CATERPILLAR INC,ok,355,0,2010-01-27,2026-06-11,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+DE,DE,315189,DEERE & CO,ok,284,0,2010-01-04,2026-06-01,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+MMM,MMM,66740,3M CO,ok,284,0,2010-01-28,2026-06-08,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+HON,HON,773840,HONEYWELL INTERNATIONAL INC,ok,263,0,2010-01-07,2026-06-15,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+UPS,UPS,1090727,UNITED PARCEL SERVICE INC,ok,174,0,2010-02-02,2026-06-15,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+FDX,FDX,1048911,FEDEX CORP,ok,208,0,2010-03-18,2026-06-08,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+DAL,DAL,27904,"DELTA AIR LINES, INC.",ok,350,0,2010-01-26,2026-06-12,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+UAL,UAL,100517,"United Airlines Holdings, Inc.",ok,461,0,2010-01-12,2026-05-22,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+LUV,LUV,92380,SOUTHWEST AIRLINES CO,ok,330,0,2010-01-08,2026-05-19,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+CVX,CVX,93410,CHEVRON CORP,ok,217,0,2010-01-11,2026-05-29,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+COP,COP,1163165,CONOCOPHILLIPS,ok,164,0,2010-01-19,2026-05-14,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+OXY,OXY,797468,OCCIDENTAL PETROLEUM CORP /DE/,ok,235,0,2010-01-28,2026-05-05,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+SLB,SLB,87347,SLB LIMITED/NV,ok,224,0,2010-01-22,2026-06-10,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+HAL,HAL,45012,HALLIBURTON CO,ok,202,0,2010-01-28,2026-05-20,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+FCX,FCX,831259,FREEPORT-MCMORAN INC,ok,263,0,2010-01-21,2026-06-10,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+NUE,NUE,73309,NUCOR CORP,ok,165,0,2010-01-11,2026-06-02,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+DOW,DOW,1751788,DOW INC.,ok,90,0,2019-03-13,2026-04-23,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+ALB,ALB,915913,ALBEMARLE CORP,ok,219,0,2010-01-26,2026-06-05,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+MOS,MOS,1285785,MOSAIC CO,ok,317,0,2010-01-05,2026-06-15,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+JNJ,JNJ,200406,JOHNSON & JOHNSON,ok,213,0,2010-01-26,2026-04-28,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+MRK,MRK,310158,"Merck & Co., Inc.",ok,149,0,2010-02-09,2026-05-28,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+ABBV,ABBV,1551152,AbbVie Inc.,ok,194,0,2012-12-20,2026-05-12,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+BMY,BMY,14272,BRISTOL MYERS SQUIBB CO,ok,236,0,2010-01-28,2026-05-08,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+GILD,GILD,882095,"GILEAD SCIENCES, INC.",ok,193,0,2010-01-26,2026-05-20,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+AMGN,AMGN,318154,AMGEN INC,ok,203,0,2010-01-25,2026-05-20,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+MDT,MDT,1613103,Medtronic plc,ok,137,0,2015-01-15,2026-06-03,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+CVS,CVS,64803,CVS HEALTH Corp,ok,264,0,2010-02-08,2026-05-18,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+UNH,UNH,731766,UNITEDHEALTH GROUP INC,ok,272,0,2010-01-06,2026-06-05,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+TMO,TMO,97745,THERMO FISHER SCIENTIFIC INC.,ok,243,0,2010-02-03,2026-05-26,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+AMT,AMT,1053507,AMERICAN TOWER CORP /MA/,ok,392,0,2010-01-29,2026-06-04,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+PLD,PLD,1045609,"Prologis, Inc.",ok,282,0,2010-02-02,2026-06-11,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+O,O,726728,REALTY INCOME CORP,ok,321,0,2010-01-07,2026-05-22,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+VTR,VTR,740260,"Ventas, Inc.",ok,247,0,2010-01-26,2026-06-15,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+T,T,732717,AT&T INC.,ok,459,1,2010-01-28,2026-06-16,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+VZ,VZ,732712,VERIZON COMMUNICATIONS INC,ok,258,0,2013-09-03,2026-06-17,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+KO,KO,21344,COCA COLA CO,ok,234,0,2010-02-09,2026-05-01,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+PEP,PEP,77476,PEPSICO INC,ok,270,0,2010-01-11,2026-05-22,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+PG,PG,80424,PROCTER & GAMBLE Co,ok,367,0,2010-01-08,2026-04-24,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+KHC,KHC,1637459,Kraft Heinz Co,ok,164,0,2015-06-18,2026-06-18,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+ADBE,ADBE,796343,ADOBE INC.,ok,149,0,2010-01-04,2026-06-11,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+TXN,TXN,97476,TEXAS INSTRUMENTS INC,ok,188,0,2010-01-25,2026-06-02,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+QCOM,QCOM,804328,QUALCOMM INC/DE,ok,196,0,2010-01-27,2026-04-29,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+AVGO,AVGO,1730168,Broadcom Inc.,ok,121,0,2018-03-23,2026-06-18,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+LRCX,LRCX,707549,LAM RESEARCH CORP,ok,200,0,2010-01-27,2026-04-22,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+DIS,DIS,1744489,Walt Disney Co,ok,105,0,2019-03-20,2026-05-06,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+CMCSA,CMCSA,1166691,COMCAST CORP,ok,247,0,2010-02-03,2026-06-12,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+BKNG,BKNG,1075531,Booking Holdings Inc.,ok,247,0,2010-02-18,2026-06-02,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+CMG,CMG,1058090,CHIPOTLE MEXICAN GRILL INC,ok,141,0,2010-01-08,2026-06-17,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+TJX,TJX,109198,TJX COMPANIES INC /DE/,ok,158,0,2010-01-29,2026-06-11,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+RTX,RTX,101829,RTX Corp,ok,216,0,2010-01-27,2026-05-04,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+LMT,LMT,936468,LOCKHEED MARTIN CORP,ok,207,0,2010-01-28,2026-05-13,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+NOC,NOC,1133421,NORTHROP GRUMMAN CORP /DE/,ok,196,0,2010-02-04,2026-05-21,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+ETN,ETN,1551182,Eaton Corp plc,ok,137,0,2012-11-16,2026-06-11,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+EMR,EMR,32604,EMERSON ELECTRIC CO,ok,281,0,2010-02-02,2026-05-05,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+EOG,EOG,821189,EOG RESOURCES INC,ok,208,0,2010-01-15,2026-05-21,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+KMI,KMI,1506307,"KINDER MORGAN, INC.",ok,347,0,2011-03-02,2026-05-28,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+LIN,LIN,1707925,LINDE PLC,ok,78,0,2018-10-31,2026-05-13,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+APD,APD,2969,"Air Products & Chemicals, Inc.",ok,203,0,2010-01-05,2026-04-30,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
+DHR,DHR,313616,DANAHER CORP /DE/,ok,203,0,2010-01-28,2026-06-03,SEC submissions metadata checked for 8-K/8-K/A Item 1.03.
