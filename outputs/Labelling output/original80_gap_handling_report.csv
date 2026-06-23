@@ -1,0 +1,5 @@
+﻿ticker,price_symbol,sec_symbol,firm_name,special_note
+BBBY,BBBY,BBBY,Bed Bath & Beyond,Use old Bed Bath & Beyond bankruptcy entity CIK 0000886158; truncate Yahoo BBBY price history at 2023-04-21 before the Chapter 11 filing. Do not attach current CIK 0001130713 to legacy BBBY samples.
+CHK,EXE,EXE,Chesapeake Energy / Expand Energy,CHK Yahoo symbol unavailable; EXE/CIK successor used for post-reorg coverage; no hard splice to old CHK price.
+SQ,XYZ,XYZ,Block,SQ Yahoo/SEC current symbol unavailable; XYZ used as current Block ticker.
+GPS,GAP,GAP,Gap,GPS Yahoo/SEC current symbol unavailable; GAP used as current Gap ticker.

@@ -1,0 +1,21 @@
+﻿ticker,price_symbol,sec_symbol,firm_name,sector,archetype,sample_phase,special_note,non_financial_screen,selection_status,effective_start,effective_end,sec_cik_override,price_end,price_coverage_status
+ADBE,ADBE,ADBE,Adobe,Software,Phase3 technology,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+TXN,TXN,TXN,Texas Instruments,Semiconductors,Phase3 technology,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+QCOM,QCOM,QCOM,Qualcomm,Semiconductors,Phase3 technology,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+AVGO,AVGO,AVGO,Broadcom,Semiconductors,Phase3 technology,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+LRCX,LRCX,LRCX,Lam Research,Semiconductors,Phase3 technology,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+DIS,DIS,DIS,Walt Disney,Media,Phase3 consumer/media,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+CMCSA,CMCSA,CMCSA,Comcast,Communication,Phase3 communication,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+BKNG,BKNG,BKNG,Booking Holdings,Consumer,Phase3 travel,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+CMG,CMG,CMG,Chipotle Mexican Grill,Consumer,Phase3 restaurant,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+TJX,TJX,TJX,TJX Companies,Retail,Phase3 retail,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+RTX,RTX,RTX,RTX,Aerospace,Phase3 industrial,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+LMT,LMT,LMT,Lockheed Martin,Aerospace,Phase3 industrial,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+NOC,NOC,NOC,Northrop Grumman,Aerospace,Phase3 industrial,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+ETN,ETN,ETN,Eaton,Industrials,Phase3 industrial,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+EMR,EMR,EMR,Emerson Electric,Industrials,Phase3 industrial,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+EOG,EOG,EOG,EOG Resources,Energy,Phase3 energy,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+KMI,KMI,KMI,Kinder Morgan,Energy,Phase3 energy,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+LIN,LIN,LIN,Linde,Materials,Phase3 materials,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+APD,APD,APD,Air Products and Chemicals,Materials,Phase3 materials,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100
+DHR,DHR,DHR,Danaher,Healthcare,Phase3 healthcare,phase3,,1,selected,2010-01-01,,,,see_price_refresh_report_100

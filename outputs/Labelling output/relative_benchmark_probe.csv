@@ -1,0 +1,15 @@
+﻿ticker,n_evaluable,abs_event_rate,rel_event_rate,benchmark_method
+AAPL,186,0.0,0.07526881720430108,internal_equal_weight_coarse_sector_loo
+MSFT,186,0.0,0.005376344086021506,internal_equal_weight_coarse_sector_loo
+NVDA,186,0.11827956989247312,0.15591397849462366,internal_equal_weight_coarse_sector_loo
+AAL,186,0.16129032258064516,0.24193548387096775,internal_equal_weight_coarse_sector_loo
+SPG,186,0.06989247311827956,0.12903225806451613,internal_equal_weight_coarse_sector_loo
+META,158,0.10759493670886076,0.17721518987341772,internal_equal_weight_coarse_sector_loo
+XOM,186,0.05913978494623656,0.0,internal_equal_weight_coarse_sector_loo
+BBBY,148,0.4594594594594595,0.6148648648648649,internal_equal_weight_coarse_sector_loo
+CHK,53,0.0,0.018867924528301886,internal_equal_weight_coarse_sector_loo
+M,186,0.22580645161290322,0.3763440860215054,internal_equal_weight_coarse_sector_loo
+KSS,186,0.23655913978494625,0.3602150537634409,internal_equal_weight_coarse_sector_loo
+ADBE,186,0.05913978494623656,0.08064516129032258,internal_equal_weight_coarse_sector_loo
+DIS,186,0.03763440860215054,0.15053763440860216,internal_equal_weight_coarse_sector_loo
+EOG,186,0.06989247311827956,0.016129032258064516,internal_equal_weight_coarse_sector_loo

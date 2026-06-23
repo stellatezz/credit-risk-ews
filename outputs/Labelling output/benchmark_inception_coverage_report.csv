@@ -1,0 +1,2 @@
+﻿benchmark_name,benchmark_type,first_available_month,last_available_month,covers_required_window,notes
+internal_equal_weight_coarse_sector_loo,internal,2009-01-31,2026-06-30,1,FF equal-weight not used; internal LOO fallback applied after full 100 price refresh.

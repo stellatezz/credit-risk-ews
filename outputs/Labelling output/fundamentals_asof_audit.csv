@@ -1,0 +1,2 @@
+﻿feature_group,formal_model_use,status,reason
+fundamentals,0,excluded_from_formal_models,Previous fundamentals.csv was loader=placeholder; no SEC XBRL real loader completed in this run.

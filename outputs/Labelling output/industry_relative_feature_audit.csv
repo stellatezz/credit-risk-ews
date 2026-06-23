@@ -1,0 +1,4 @@
+﻿feature,status,allowed_in_formal_model,leakage_status
+benchmark_ret_1m_loo,rebuilt_current_run,1,month-t internal LOO benchmark return only
+ret_1m_rel,rebuilt_current_run,1,month-t company return minus month-t LOO benchmark return
+forward_max_excess_drawdown_12m_rel,rebuilt_current_run,0,future 12-month label-construction outcome; excluded from formal model features

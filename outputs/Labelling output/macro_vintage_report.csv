@@ -1,0 +1,4 @@
+﻿series_name,series_id,download_status,vintage_type,download_date,first_date,last_date,alignment,limitation
+vix,VIXCLS,ok,latest_vintage_from_FRED_graph_csv,2026-06-21,1990-01-02,2026-06-17,month_end_last_available_then_ffill,latest vintage; real-time ALFRED vintage not used
+term_spread,T10Y2Y,ok,latest_vintage_from_FRED_graph_csv,2026-06-21,1976-06-01,2026-06-18,month_end_last_available_then_ffill,latest vintage; real-time ALFRED vintage not used
+credit_spread,BAA10Y,ok,latest_vintage_from_FRED_graph_csv,2026-06-21,1986-01-02,2026-06-17,month_end_last_available_then_ffill,latest vintage; real-time ALFRED vintage not used

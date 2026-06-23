@@ -1,0 +1,15 @@
+﻿ticker,ff_portfolio,probe_status,n_evaluable_months,ff_coverage_rate,internal_label_a_abs_rate,ff_rel_event_rate_probe,note
+AAPL,Hardw,ok,186,1.0,0.0,0.04838709677419355,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
+MSFT,Softw,ok,186,1.0,0.0,0.010752688172043012,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
+NVDA,Chips,ok,186,1.0,0.11827956989247312,0.13440860215053763,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
+AAL,Trans,ok,186,1.0,0.16129032258064516,0.2903225806451613,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
+SPG,RlEst,ok,186,1.0,0.06989247311827956,0.0967741935483871,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
+META,BusSv,ok,158,1.0,0.10759493670886076,0.15822784810126583,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
+XOM,Oil,ok,186,1.0,0.05913978494623656,0.026881720430107527,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
+BBBY,Rtail,ok,148,1.0,0.4594594594594595,0.527027027027027,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
+CHK,Oil,ok,53,1.0,0.0,0.0,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
+M,Rtail,ok,186,1.0,0.22580645161290322,0.3225806451612903,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
+KSS,Rtail,ok,186,1.0,0.23655913978494625,0.22043010752688172,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
+ADBE,Softw,ok,186,1.0,0.05913978494623656,0.053763440860215055,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
+DIS,Fun,ok,186,1.0,0.03763440860215054,0.026881720430107527,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
+EOG,Oil,ok,186,1.0,0.06989247311827956,0.043010752688172046,Thin-slice FF equal-weight industry probe only; main label_a_rel still uses internal LOO fallback pending full ticker-to-FF mapping validation.
