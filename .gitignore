@@ -32,3 +32,6 @@ DASHBOARD_README.md
 
 # Claude/superpowers working files (design specs, plans) — not project deliverables
 docs/superpowers/
+
+# Live-watchlist runtime caches (same-day TTL; rebuilt by scripts/warm_live_cache.py)
+data/interim/live/

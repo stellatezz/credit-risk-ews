@@ -55,8 +55,10 @@ Every model is a standard interpretable regression (logistic, fixed-effects, dis
 │   │   ├── viz.py                ← evaluation charts
 │   │   └── pipeline.py           ← the orchestrator (main)
 │   └── run.py                    ← entry point (thin wrapper; sets sys.path, calls ews.pipeline.main)
-├── pages/                        ← Streamlit pages 1–7 (Model Eval, Firm, Methodology, About,
-│                                    Feature-Group, Sector/Category, False Positives vs Negatives)
+├── pages/                        ← Streamlit pages (0 = LIVE analyst watchlist — the deployed
+│                                    model scoring live yfinance/EDGAR data, add-any-ticker;
+│                                    1–9 = Model Eval, Firm, Methodology, About, Feature-Group,
+│                                    Sector/Category, FP/FN, Horizon, Threshold diagnostics)
 ├── scripts/                      ← standalone analyses
 │   ├── extract_firm_categories.py   ← archetype parser
 │   ├── fp_fn_analysis.py            ← FP/FN cost frontier + held-out-test operating points
@@ -98,6 +100,10 @@ MPLBACKEND=Agg python scripts/fp_fn_analysis.py
 
 # Browse all results in the dashboard
 streamlit run project_home.py
+
+# BEFORE A LIVE DEMO: pre-warm the Live Watchlist caches (prices + EDGAR + scores)
+# so the analyst monitoring page loads instantly on stage
+python scripts/warm_live_cache.py
 
 # Verify your setup
 python tests/smoke_test.py

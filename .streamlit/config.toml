@@ -1,0 +1,11 @@
+# App theme — pinned to LIGHT so the live demo looks identical on any
+# machine/projector regardless of the presenter's system dark-mode setting.
+[theme]
+base = "light"
+primaryColor = "#2a78d6"
+backgroundColor = "#fcfcfb"
+secondaryBackgroundColor = "#f4f3f0"
+textColor = "#0b0b0b"
+
+[browser]
+gatherUsageStats = false
