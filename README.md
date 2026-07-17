@@ -143,3 +143,151 @@ No-look-ahead is a hard rule: fundamentals align to **filing date**, not period-
 ## One-paragraph project summary for outsiders
 
 Each month, for each of ~80 US-listed non-financial firms, the pipeline reads SEC filings, stock prices, and macro stress indicators, and outputs a probability between 0 and 1 that the firm will experience **market-implied credit deterioration** — a peak-to-trough equity drawdown of at least 40% — at some point over the next 12 months. A credit analyst can then focus their review time on the highest-probability firms (a "monitoring scorecard" for watchlist triage). Everything uses open, reproducible data, and every model is an interpretable regression whose coefficients can be read and argued with.
+
+## Exact step-by-step setup and run instructions
+
+This project is configured to run from the repository root. The steps below are intentionally explicit so a grader with a fresh clone can reproduce results quickly.
+
+Prerequisites
+- Git
+- Python 3.10+ / 3.11 (the repo was validated on Python 3.11)
+- Network access for first runs (yfinance, EDGAR, FRED). Subsequent runs use the committed caches under data/raw and outputs/.
+- Optional: VS Code + Dev Containers (there is a .devcontainer configuration that auto-runs the app).
+
+1) Clone the repository
+```bash
+git clone https://github.com/stellatezz/credit-risk-ews.git
+cd credit-risk-ews
+```
+
+2) Create & activate a virtual environment (one-time)
+- macOS / Linux (bash / zsh)
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+- Windows (PowerShell)
+```powershell
+python -m venv .venv
+. .\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+- Windows (CMD)
+```cmd
+python -m venv .venv
+.venv\Scripts\activate.bat
+pip install -r requirements.txt
+```
+
+Notes:
+- If pip reports a permissions error, re-run from the activated environment or use the --user flag only if you understand implications.
+- If you hit a PEP 668 / environment isolation message on macOS, use the venv approach above (this avoids system-managed Python issues).
+
+3) Run the pipeline (produces data/interim and data/processed and outputs/)
+This is the canonical way to reconstruct the pipeline output. The first run will download remote data (yfinance, EDGAR) and can take a minute or two.
+
+Preferred (wrapper that adjusts sys.path and enforces UTF-8 on Windows):
+```bash
+python src/run.py
+```
+
+Alternative (module run; PYTHONPATH required because the repo does not use pyproject.toml):
+- macOS / Linux:
+```bash
+PYTHONPATH=src python -m ews.pipeline
+```
+- Windows PowerShell:
+```powershell
+$env:PYTHONPATH = "src"
+python -m ews.pipeline
+```
+- Windows CMD:
+```cmd
+set PYTHONPATH=src&& python -m ews.pipeline
+```
+
+4) Pre-warm the live watchlist caches (recommended before demos)
+This script fetches any missing live prices/filings and writes the cache the Streamlit app uses so the UI loads instantly:
+```bash
+python scripts/warm_live_cache.py
+# Optional: add --force to force refetch of prices even if today's cache exists
+python scripts/warm_live_cache.py --force
+```
+
+5) Start the Streamlit dashboard (UI)
+From the repository root:
+```bash
+streamlit run project_home.py
+```
+
+If you see import errors from within the pages (rare), run with PYTHONPATH set so the app can import the pipeline code:
+- macOS / Linux:
+```bash
+PYTHONPATH=src streamlit run project_home.py
+```
+- Windows PowerShell:
+```powershell
+$env:PYTHONPATH = "src"
+streamlit run project_home.py
+```
+
+Devcontainer / Codespaces
+- If you use VS Code Dev Containers or Codespaces, open the repo in the devcontainer. The devcontainer is configured to forward port 8501 and the post-attach command launches Streamlit automatically:
+  - Port: 8501
+  - If Streamlit does not open automatically, run: streamlit run project_home.py
+
+6) Quick verification steps (files & smoke test)
+- Confirm the main processed panel exists:
+```bash
+ls -l data/processed/panel_phase2.csv
+# or on Windows:
+dir data\processed\panel_phase2.csv
+```
+- Run the smoke test (quick sanity check):
+```bash
+python tests/smoke_test.py
+```
+- You can inspect the committed outputs used by the Streamlit app in:
+  - outputs/figures/
+  - outputs/*_results.csv, outputs/*_findings.md
+
+Where the data lives (exact paths in repo)
+- Raw caches / downloaded price caches:
+  - data/raw/        ← yfinance / raw files (committed for reproducibility)
+- Per-source intermediate tables:
+  - data/interim/    ← {prices, market_features, fundamentals, macros, labels}.csv
+- Final modeling panel (live Phase 2 panel used by the app):
+  - data/processed/panel_phase2.csv
+  - (legacy toy panel) data/processed/panel_phase1.csv
+- Additional useful files:
+  - data/firm_categories.csv   ← firm categories / archetypes
+  - outputs/                   ← charts and CSVs that the Streamlit app displays
+  - scripts/warm_live_cache.py ← pre-warm dashboard cache script
+
+Common troubleshooting
+- UnicodeEncodeError on Windows console:
+  - Use the provided wrapper `python src/run.py` which forces UTF-8 for console output (this repository contains a documented Unicode fix).
+- ImportError for `ews` when running modules:
+  - Use PYTHONPATH=src (see step 3) or run the provided wrapper `python src/run.py`.
+- Streamlit port 8501 already in use:
+  - Run: streamlit run project_home.py --server.port 8502
+- Slow first run (downloads from yfinance/EDGAR/FRED):
+  - Expect 30–120s for the first price / filings fetch; subsequent runs are cached.
+
+Quick checklist for a grader (copy this and run)
+```bash
+git clone https://github.com/stellatezz/credit-risk-ews.git
+cd credit-risk-ews
+python3 -m venv .venv
+source .venv/bin/activate        # or activate on Windows
+pip install -r requirements.txt
+python src/run.py                # builds data/processed and outputs/
+python scripts/warm_live_cache.py
+streamlit run project_home.py
+# Open http://localhost:8501 in a browser
+```
+
+We have also hosted it on the free version of Streamlit so the webpage can be viewed directly at: https://credit-risk-ews-hk.streamlit.app/
